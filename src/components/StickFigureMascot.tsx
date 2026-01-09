@@ -473,6 +473,11 @@ export function StickFigureMascot() {
               style={{ originX: "35px", originY: "18px" }}
               transition={{ type: "spring", stiffness: 300 }}
             >
+              {/* Hat */}
+              <ellipse cx={35} cy={4} rx={20} ry={4} fill="hsl(var(--secondary))" />
+              <rect x={22} y={-10} width={26} height={14} rx={3} fill="hsl(var(--secondary))" />
+              <rect x={27} y={-6} width={16} height={3} fill="hsl(var(--primary))" />
+              
               <circle
                 cx={35}
                 cy={18}
