@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroSlides, siteConfig, blogPosts } from "@/data/siteData";
+import { getCategoryFallback } from "@/data/products";
 import { products, categories, featuredProducts, dealOfTheWeek, formatPrice } from "@/data/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -251,6 +252,9 @@ function DealOfTheWeek() {
                   src={product.image}
                   alt={product.name}
                   className="product-image w-full h-32 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = getCategoryFallback(product.category);
+                  }}
                 />
               </div>
               <span className="text-xs text-primary font-medium">{product.category}</span>
@@ -312,6 +316,9 @@ function FeaturedProducts() {
                   src={product.image}
                   alt={product.name}
                   className="product-image w-full h-48 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = getCategoryFallback(product.category);
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
