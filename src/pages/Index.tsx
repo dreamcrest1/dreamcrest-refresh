@@ -8,7 +8,8 @@ import { products, categories, featuredProducts, dealOfTheWeek, formatPrice } fr
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
-
+import { InteractiveBackground } from "@/components/InteractiveBackground";
+import { StickFigureMascot } from "@/components/StickFigureMascot";
 // Floating WhatsApp Button
 function WhatsAppButton() {
   return (
@@ -487,6 +488,7 @@ export default function Index() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <CyberBackground />
       <CursorTrail />
+      <InteractiveBackground />
       <Header />
       <main className="relative z-10">
         <HeroSection />
@@ -498,6 +500,7 @@ export default function Index() {
       </main>
       <Footer />
       <WhatsAppButton />
+      <StickFigureMascot />
     </div>
   );
 }
