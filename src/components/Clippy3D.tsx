@@ -156,7 +156,7 @@ function ClippyModel({
       )}
     </group>
   );
-  );
+
 }
 
 // Loading fallback
