@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Grid, List, ExternalLink, Sparkles } from "lucide-react";
+import { Search, Grid, List, ExternalLink, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { products, categories, formatPrice, getCategoryFallback } from "@/data/products";
 
 export default function Products() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"discount" | "price-low" | "price-high">("discount");
@@ -51,6 +52,14 @@ export default function Products() {
     return filtered;
   }, [searchQuery, selectedCategory, sortBy]);
 
+  const handleCardClick = (productId: number, e: React.MouseEvent) => {
+    // Don't navigate if clicking on the Buy Now button
+    if ((e.target as HTMLElement).closest('a[target="_blank"]')) {
+      return;
+    }
+    navigate(`/product/${productId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <CyberBackground />
@@ -63,13 +72,13 @@ export default function Products() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
               All <span className="gradient-text">Products</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Browse our collection of premium digital products at unbeatable prices
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto px-4">
+              Browse our collection of {products.length}+ premium digital products at unbeatable prices
             </p>
           </motion.div>
 
@@ -78,81 +87,87 @@ export default function Products() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex flex-col lg:flex-row gap-4 mb-8"
+            className="flex flex-col gap-3 mb-6 md:mb-8"
           >
-            {/* Search */}
-            <div className="relative flex-1">
+            {/* Search - Full width on mobile */}
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-12 text-base"
               />
             </div>
 
-            {/* Sort */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="px-4 py-2 rounded-lg bg-card border border-border text-foreground"
-            >
-              <option value="discount">Highest Discount</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
-
-            {/* View Mode */}
+            {/* Sort and View Mode Row */}
             <div className="flex gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="flex-1 px-3 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm"
               >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+                <option value="discount">Highest Discount</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+
+              {/* View Mode - Hidden on mobile */}
+              <div className="hidden md:flex gap-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </motion.div>
 
-          {/* Categories */}
+          {/* Categories - Horizontal scroll on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap gap-2 mb-8"
+            className="mb-6 md:mb-8 -mx-4 px-4 md:mx-0 md:px-0"
           >
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-            >
-              All
-            </Button>
-            {categories.map((cat) => (
+            <div className="flex gap-2 overflow-x-auto pb-2 md:flex-wrap md:overflow-visible scrollbar-hide">
               <Button
-                key={cat.name}
-                variant={selectedCategory === cat.name ? "default" : "outline"}
+                variant={selectedCategory === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSelectedCategory(cat.name)}
+                onClick={() => setSelectedCategory(null)}
+                className="shrink-0"
               >
-                {cat.name}
+                All ({products.length})
               </Button>
-            ))}
+              {categories.map((cat) => (
+                <Button
+                  key={cat.name}
+                  variant={selectedCategory === cat.name ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.name)}
+                  className="shrink-0 whitespace-nowrap"
+                >
+                  {cat.name} ({cat.count})
+                </Button>
+              ))}
+            </div>
           </motion.div>
 
           {/* Results Count */}
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-4 md:mb-6 text-sm">
             Showing {filteredProducts.length} of {products.length} products
           </p>
 
-          {/* Products Grid */}
+          {/* Products Grid - Always grid on mobile */}
           <AnimatePresence mode="wait">
             <motion.div
               key={`${selectedCategory}-${sortBy}-${viewMode}`}
@@ -160,8 +175,8 @@ export default function Products() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                viewMode === "grid" || window.innerWidth < 768
+                  ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6"
                   : "flex flex-col gap-4"
               }
             >
@@ -170,17 +185,16 @@ export default function Products() {
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.02 }}
-                  className={
-                    viewMode === "grid"
-                      ? "group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300"
-                      : "group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 flex gap-4 p-4"
-                  }
+                  transition={{ delay: Math.min(index * 0.02, 0.5) }}
+                  onClick={(e) => handleCardClick(product.id, e)}
+                  className={`group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 cursor-pointer active:scale-[0.98] ${
+                    viewMode === "list" && window.innerWidth >= 768 ? "flex gap-4 p-4" : ""
+                  }`}
                 >
                   {/* Image */}
                   <div
                     className={
-                      viewMode === "grid"
+                      viewMode === "grid" || window.innerWidth < 768
                         ? "relative aspect-square overflow-hidden"
                         : "relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden"
                     }
@@ -189,49 +203,44 @@ export default function Products() {
                       src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = getCategoryFallback(product.category);
                       }}
                     />
-                    <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
+                    <Badge className="absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
                       {product.discount}% OFF
                     </Badge>
                   </div>
 
                   {/* Content */}
-                  <div className={viewMode === "grid" ? "p-4" : "flex-1 flex flex-col justify-center"}>
-                    <span className="text-xs text-primary font-medium">{product.category}</span>
-                    <h3 className="font-semibold text-foreground mt-1 line-clamp-2 group-hover:text-primary transition-colors">
+                  <div className={viewMode === "grid" || window.innerWidth < 768 ? "p-2.5 md:p-4" : "flex-1 flex flex-col justify-center"}>
+                    <span className="text-[10px] md:text-xs text-primary font-medium">{product.category}</span>
+                    <h3 className="font-semibold text-foreground mt-0.5 md:mt-1 line-clamp-2 text-xs md:text-base group-hover:text-primary transition-colors leading-tight">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1 line-clamp-2 hidden md:block">
                       {product.description}
                     </p>
 
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(product.salePrice)}
-                        </span>
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(product.regularPrice)}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-1.5 md:gap-2 mt-2 md:mt-3">
+                      <span className="text-sm md:text-lg font-bold text-primary">
+                        {formatPrice(product.salePrice)}
+                      </span>
+                      <span className="text-[10px] md:text-sm text-muted-foreground line-through">
+                        {formatPrice(product.regularPrice)}
+                      </span>
                     </div>
 
-                    <div className="flex gap-2 mt-3">
-                      <Link to={`/product/${product.id}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Details
-                        </Button>
-                      </Link>
+                    <div className="mt-2 md:mt-3">
                       <a
                         href={product.externalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1"
+                        onClick={(e) => e.stopPropagation()}
+                        className="block"
                       >
-                        <Button size="sm" className="w-full gap-1">
+                        <Button size="sm" className="w-full gap-1 text-xs md:text-sm h-8 md:h-9">
                           Buy Now <ExternalLink className="h-3 w-3" />
                         </Button>
                       </a>
@@ -243,10 +252,10 @@ export default function Products() {
           </AnimatePresence>
 
           {filteredProducts.length === 0 && (
-            <div className="text-center py-16">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No products found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filters</p>
+            <div className="text-center py-12 md:py-16">
+              <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg md:text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground text-sm md:text-base">Try adjusting your search or filters</p>
             </div>
           )}
         </div>

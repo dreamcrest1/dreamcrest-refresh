@@ -5,9 +5,9 @@ import logo from "@/assets/dreamcrest-logo.png";
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t border-border mt-20">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-card border-t border-border mt-16 md:mt-20">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {/* Brand */}
           <div>
             <img src={logo} alt="Dreamcrest" className="h-12 w-auto mb-4" />
