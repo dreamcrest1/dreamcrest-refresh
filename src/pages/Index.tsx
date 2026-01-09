@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock, MessageCircle } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { heroSlides, siteConfig, blogPosts } from "@/data/siteData";
 import { getCategoryFallback } from "@/data/products";
@@ -9,31 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { InteractiveBackground } from "@/components/InteractiveBackground";
-import { StickFigureMascot } from "@/components/StickFigureMascot";
 import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
-
-// Floating WhatsApp Button
-function WhatsAppButton() {
-  return (
-    <motion.a
-      href={`https://wa.me/${siteConfig.contact.phone.replace(/\D/g, "")}`}
-      target="_blank"
-      rel="noopener"
-      className="fixed bottom-6 left-6 z-50 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors"
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-    >
-      <MessageCircle className="h-6 w-6" />
-      <motion.div
-        className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full"
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      />
-    </motion.a>
-  );
-}
 
 // Hero Section with enhanced animations
 function HeroSection() {
@@ -502,8 +478,6 @@ export default function Index() {
         <BlogSection />
       </main>
       <Footer />
-      <WhatsAppButton />
-      <StickFigureMascot />
     </div>
   );
 }
