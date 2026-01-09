@@ -159,6 +159,7 @@ export const refundPolicy = [
 export const navLinks = [
   { name: "Home", href: "/" },
   { name: "Products", href: "/products" },
+  { name: "Blog", href: "/blog" },
   { name: "About", href: "/about" },
   { name: "FAQ", href: "/faq" },
   { name: "Contact", href: "/contact" },
