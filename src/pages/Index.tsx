@@ -9,7 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { InteractiveBackground } from "@/components/InteractiveBackground";
-import { ClippyMascot } from "@/components/ClippyMascot";
+import { Clippy3D } from "@/components/Clippy3D";
 // Floating WhatsApp Button
 function WhatsAppButton() {
   return (
@@ -17,7 +17,7 @@ function WhatsAppButton() {
       href={`https://wa.me/${siteConfig.contact.phone.replace(/\D/g, "")}`}
       target="_blank"
       rel="noopener"
-      className="fixed bottom-6 right-6 z-50 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors"
+      className="fixed bottom-6 left-6 z-50 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-colors"
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       whileHover={{ scale: 1.1 }}
@@ -500,7 +500,7 @@ export default function Index() {
       </main>
       <Footer />
       <WhatsAppButton />
-      <ClippyMascot />
+      <Clippy3D />
     </div>
   );
 }
