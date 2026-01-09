@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 
 // Expanded content database
@@ -54,6 +54,11 @@ const content = {
     "GK: The Himalayas are still growing!",
     "GK: India has the world's largest postal network!",
     "GK: Indian Railways employs 1.3 million people!",
+    "GK: India has over 1.4 billion people!",
+    "GK: The Ganges is 2,525 km long!",
+    "GK: India has 6 seasons, not 4!",
+    "GK: Varanasi is one of the oldest cities!",
+    "GK: India's IT industry is worth $200B+!",
   ],
   techNews: [
     "🤖 AI: GPT-5 is revolutionizing conversations!",
@@ -71,6 +76,11 @@ const content = {
     "🛡️ Security: AI fighting cyber threats!",
     "🏥 Health: AI diagnosing diseases faster!",
     "🎬 Media: AI generating Hollywood movies!",
+    "🤖 AI: Sora creates amazing videos!",
+    "💰 Crypto: Bitcoin hitting new highs!",
+    "🧬 Biotech: CRISPR changing medicine!",
+    "🔋 Energy: EV batteries improving fast!",
+    "🛰️ Space: Starlink covers the globe!",
   ],
   funFacts: [
     "🍕 Fact: Pizza was invented in Naples, Italy!",
@@ -88,6 +98,11 @@ const content = {
     "🦜 Fact: Parrots name their babies!",
     "🌍 Fact: Earth's core is as hot as the sun!",
     "🐋 Fact: Blue whale's heart is car-sized!",
+    "🦷 Fact: Tooth enamel is the hardest body part!",
+    "🌲 Fact: Trees can communicate underground!",
+    "🦑 Fact: Giant squids have basketball-sized eyes!",
+    "🌶️ Fact: Capsaicin makes peppers spicy!",
+    "🦴 Fact: Babies have 300 bones, adults have 206!",
   ],
   jokes: [
     "😂 Why do programmers hate nature? Too many bugs!",
@@ -98,6 +113,8 @@ const content = {
     "😁 What's a robot's favorite music? Heavy metal!",
     "😂 Why don't scientists trust atoms? They make up everything!",
     "🤣 What do you call a sleeping dinosaur? A dino-snore!",
+    "😄 Why did the developer go broke? Used too much cache!",
+    "😆 What's a hacker's favorite season? Phishing season!",
   ],
   greetings: [
     "Hey there! Welcome! 👋",
@@ -113,199 +130,89 @@ const content = {
 // Enhanced poses with more expressions
 const poses = {
   idle: {
-    head: { x: 0, y: 0, rotate: 0 },
-    leftArm: { rotate: -15 },
-    rightArm: { rotate: 15 },
-    leftLeg: { rotate: 5 },
-    rightLeg: { rotate: -5 },
-    body: { scaleY: 1 },
+    body: { y: 0 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -20 },
+    rightArm: { rotate: 20 },
+    leftLeg: { rotate: 8 },
+    rightLeg: { rotate: -8 },
     expression: "smile",
   },
   wave: {
-    head: { x: 0, y: 0, rotate: 5 },
-    leftArm: { rotate: -15 },
-    rightArm: { rotate: -140 },
+    body: { y: 0 },
+    head: { rotate: 5 },
+    leftArm: { rotate: -20 },
+    rightArm: { rotate: -150 },
     leftLeg: { rotate: 0 },
     rightLeg: { rotate: 0 },
-    body: { scaleY: 1 },
     expression: "happy",
   },
   dance1: {
-    head: { x: 5, y: -3, rotate: -10 },
-    leftArm: { rotate: -60 },
-    rightArm: { rotate: 60 },
-    leftLeg: { rotate: 25 },
-    rightLeg: { rotate: -25 },
-    body: { scaleY: 0.95 },
+    body: { y: -3 },
+    head: { rotate: -15 },
+    leftArm: { rotate: -70 },
+    rightArm: { rotate: 70 },
+    leftLeg: { rotate: 30 },
+    rightLeg: { rotate: -30 },
     expression: "excited",
   },
   dance2: {
-    head: { x: -5, y: -3, rotate: 10 },
-    leftArm: { rotate: 60 },
-    rightArm: { rotate: -60 },
-    leftLeg: { rotate: -25 },
-    rightLeg: { rotate: 25 },
-    body: { scaleY: 0.95 },
+    body: { y: -3 },
+    head: { rotate: 15 },
+    leftArm: { rotate: 70 },
+    rightArm: { rotate: -70 },
+    leftLeg: { rotate: -30 },
+    rightLeg: { rotate: 30 },
     expression: "excited",
   },
   excited: {
-    head: { x: 0, y: -8, rotate: 0 },
+    body: { y: -5 },
+    head: { rotate: 0 },
     leftArm: { rotate: -160 },
     rightArm: { rotate: 160 },
     leftLeg: { rotate: 15 },
     rightLeg: { rotate: -15 },
-    body: { scaleY: 1.05 },
     expression: "wow",
   },
   thinking: {
-    head: { x: 5, y: 3, rotate: 15 },
+    body: { y: 0 },
+    head: { rotate: 20 },
     leftArm: { rotate: -30 },
-    rightArm: { rotate: -90 },
-    leftLeg: { rotate: 0 },
-    rightLeg: { rotate: 5 },
-    body: { scaleY: 1 },
+    rightArm: { rotate: -100 },
+    leftLeg: { rotate: 5 },
+    rightLeg: { rotate: 0 },
     expression: "thinking",
   },
   jumping: {
-    head: { x: 0, y: -15, rotate: 0 },
-    leftArm: { rotate: -120 },
-    rightArm: { rotate: 120 },
-    leftLeg: { rotate: -30 },
-    rightLeg: { rotate: 30 },
-    body: { scaleY: 1.1 },
+    body: { y: -12 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -130 },
+    rightArm: { rotate: 130 },
+    leftLeg: { rotate: -35 },
+    rightLeg: { rotate: 35 },
     expression: "wow",
   },
   dabbing: {
-    head: { x: -10, y: 5, rotate: -30 },
-    leftArm: { rotate: -45 },
-    rightArm: { rotate: 150 },
-    leftLeg: { rotate: 10 },
+    body: { y: 0 },
+    head: { rotate: -35 },
+    leftArm: { rotate: -50 },
+    rightArm: { rotate: 160 },
+    leftLeg: { rotate: 15 },
     rightLeg: { rotate: -10 },
-    body: { scaleY: 1 },
     expression: "cool",
   },
   flexing: {
-    head: { x: 0, y: -2, rotate: 0 },
-    leftArm: { rotate: -100 },
-    rightArm: { rotate: 100 },
-    leftLeg: { rotate: 10 },
-    rightLeg: { rotate: -10 },
-    body: { scaleY: 1.05 },
+    body: { y: -2 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -110 },
+    rightArm: { rotate: 110 },
+    leftLeg: { rotate: 12 },
+    rightLeg: { rotate: -12 },
     expression: "proud",
-  },
-  sleeping: {
-    head: { x: 8, y: 10, rotate: 30 },
-    leftArm: { rotate: 20 },
-    rightArm: { rotate: 30 },
-    leftLeg: { rotate: 0 },
-    rightLeg: { rotate: 0 },
-    body: { scaleY: 0.95 },
-    expression: "sleeping",
-  },
-  running: {
-    head: { x: 3, y: -5, rotate: -5 },
-    leftArm: { rotate: 45 },
-    rightArm: { rotate: -45 },
-    leftLeg: { rotate: -40 },
-    rightLeg: { rotate: 40 },
-    body: { scaleY: 1 },
-    expression: "determined",
   },
 };
 
 type PoseKey = keyof typeof poses;
-
-// Expression renderer
-function Expression({ type, scale = 1 }: { type: string; scale?: number }) {
-  const s = 14 * scale;
-  
-  switch (type) {
-    case "smile":
-      return (
-        <>
-          <circle cx={24} cy={12} r={2.5} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={12} r={2.5} fill="hsl(var(--primary-foreground))" />
-          <path d="M 22 18 Q 30 26 38 18" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
-        </>
-      );
-    case "happy":
-      return (
-        <>
-          <path d="M 21 10 Q 24 8 27 12" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 33 12 Q 36 8 39 10" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 20 18 Q 30 28 40 18" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
-        </>
-      );
-    case "excited":
-      return (
-        <>
-          <circle cx={24} cy={11} r={3} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={11} r={3} fill="hsl(var(--primary-foreground))" />
-          <ellipse cx={30} cy={22} rx={6} ry={4} fill="hsl(var(--primary-foreground))" />
-        </>
-      );
-    case "wow":
-      return (
-        <>
-          <circle cx={24} cy={10} r={3.5} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={10} r={3.5} fill="hsl(var(--primary-foreground))" />
-          <ellipse cx={30} cy={22} rx={5} ry={6} fill="hsl(var(--primary-foreground))" />
-        </>
-      );
-    case "thinking":
-      return (
-        <>
-          <circle cx={24} cy={12} r={2} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={10} r={2.5} fill="hsl(var(--primary-foreground))" />
-          <path d="M 25 20 Q 30 18 35 20" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-        </>
-      );
-    case "cool":
-      return (
-        <>
-          <rect x={19} y={8} width={10} height={6} rx={2} fill="hsl(var(--primary-foreground))" />
-          <rect x={31} y={8} width={10} height={6} rx={2} fill="hsl(var(--primary-foreground))" />
-          <path d="M 24 20 Q 30 24 36 20" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-        </>
-      );
-    case "proud":
-      return (
-        <>
-          <path d="M 21 11 L 27 11" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 33 11 L 39 11" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 23 19 Q 30 25 37 19" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
-        </>
-      );
-    case "sleeping":
-      return (
-        <>
-          <path d="M 21 12 L 27 12" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 33 12 L 39 12" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 26 20 Q 30 22 34 20" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <text x={42} y={8} fontSize={8} fill="hsl(var(--primary-foreground))">z</text>
-          <text x={46} y={4} fontSize={6} fill="hsl(var(--primary-foreground))">z</text>
-        </>
-      );
-    case "determined":
-      return (
-        <>
-          <path d="M 21 9 L 27 12" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <path d="M 33 12 L 39 9" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-          <circle cx={24} cy={14} r={2} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={14} r={2} fill="hsl(var(--primary-foreground))" />
-          <path d="M 26 21 L 34 21" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-        </>
-      );
-    default:
-      return (
-        <>
-          <circle cx={24} cy={12} r={2.5} fill="hsl(var(--primary-foreground))" />
-          <circle cx={36} cy={12} r={2.5} fill="hsl(var(--primary-foreground))" />
-          <path d="M 24 20 Q 30 24 36 20" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-        </>
-      );
-  }
-}
 
 export function StickFigureMascot() {
   const [isMinimized, setIsMinimized] = useState(true);
@@ -313,41 +220,6 @@ export function StickFigureMascot() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<string>("quote");
   const [isDancing, setIsDancing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Mouse following
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
-  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
-
-  // Track mouse position for following
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // Calculate position relative to bottom-left, with bounds
-      const targetX = Math.min(Math.max(e.clientX - 60, 20), window.innerWidth - 120);
-      const targetY = Math.min(Math.max(e.clientY - 60, 100), window.innerHeight - 150);
-      
-      // Only follow if mouse is somewhat close (within 400px)
-      const currentX = springX.get() || 24;
-      const currentY = springY.get() || window.innerHeight - 150;
-      const distance = Math.sqrt(Math.pow(e.clientX - currentX - 40, 2) + Math.pow(e.clientY - currentY - 50, 2));
-      
-      if (distance < 400) {
-        mouseX.set(targetX);
-        mouseY.set(targetY);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY, springX, springY]);
-
-  // Initialize position
-  useEffect(() => {
-    mouseX.set(24);
-    mouseY.set(window.innerHeight - 150);
-  }, [mouseX, mouseY]);
 
   // Random content generator
   const getRandomContent = useCallback(() => {
@@ -377,9 +249,8 @@ export function StickFigureMascot() {
     const interval = setInterval(() => {
       frame++;
       setCurrentPose(frame % 2 === 0 ? "dance1" : "dance2");
-    }, 400);
+    }, 350);
 
-    // Stop dancing after 4 seconds
     const timeout = setTimeout(() => {
       setIsDancing(false);
       setCurrentPose("idle");
@@ -396,28 +267,22 @@ export function StickFigureMascot() {
     if (!isMinimized) return;
 
     const interval = setInterval(() => {
-      if (Math.random() > 0.6) {
+      if (Math.random() > 0.5) {
         setIsMinimized(false);
         const { text, type } = getRandomContent();
         setMessage(text);
         setMessageType(type);
         
-        // Random action
-        const actions = ["excited", "thinking", "jumping", "flexing", "dance"] as const;
+        const actions = ["excited", "thinking", "jumping", "flexing"] as const;
         const action = actions[Math.floor(Math.random() * actions.length)];
-        
-        if (action === "dance") {
-          setIsDancing(true);
-        } else {
-          setCurrentPose(action);
-          setTimeout(() => setCurrentPose("idle"), 2000);
-        }
+        setCurrentPose(action);
+        setTimeout(() => setCurrentPose("idle"), 2000);
         
         setTimeout(() => {
           setIsMinimized(true);
-        }, 8000);
+        }, 7000);
       }
-    }, 12000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [isMinimized, getRandomContent]);
@@ -431,7 +296,6 @@ export function StickFigureMascot() {
       setMessage(text);
       setMessageType(type);
       
-      // Random reaction
       const reactions: PoseKey[] = ["excited", "jumping", "dabbing", "flexing", "wave"];
       const reaction = reactions[Math.floor(Math.random() * reactions.length)];
       setCurrentPose(reaction);
@@ -466,12 +330,7 @@ export function StickFigureMascot() {
 
   return (
     <motion.div
-      ref={containerRef}
-      className="fixed z-50"
-      style={{ 
-        left: springX, 
-        top: springY,
-      }}
+      className="fixed bottom-28 right-6 z-50"
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 2, type: "spring" }}
@@ -480,30 +339,30 @@ export function StickFigureMascot() {
       <AnimatePresence>
         {!isMinimized && message && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, x: -20 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.8, x: -20 }}
-            className="absolute bottom-full left-16 mb-2"
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            className="absolute bottom-full right-0 mb-3"
           >
-            <div className="relative bg-card/95 backdrop-blur-sm border border-border rounded-2xl p-3 shadow-xl min-w-[280px] max-w-[320px]">
+            <div className="relative bg-card/95 backdrop-blur-sm border border-border rounded-2xl p-4 shadow-xl min-w-[300px] max-w-[340px]">
               <div className="flex items-start gap-3">
-                <Sparkles className={`h-4 w-4 mt-0.5 flex-shrink-0 ${typeInfo.color}`} />
+                <Sparkles className={`h-5 w-5 mt-0.5 flex-shrink-0 ${typeInfo.color}`} />
                 <div className="flex-1">
-                  <span className={`text-[10px] uppercase font-bold tracking-wider ${typeInfo.color}`}>
+                  <span className={`text-xs uppercase font-bold tracking-wider ${typeInfo.color}`}>
                     {typeInfo.label}
                   </span>
-                  <p className="text-sm mt-1 text-foreground leading-relaxed">{message}</p>
+                  <p className="text-sm mt-1.5 text-foreground leading-relaxed">{message}</p>
                 </div>
               </div>
               {/* Speech bubble tail */}
-              <div className="absolute -bottom-2 left-8 w-4 h-4 bg-card/95 border-r border-b border-border rotate-45" />
+              <div className="absolute -bottom-2 right-10 w-4 h-4 bg-card/95 border-r border-b border-border rotate-45" />
             </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMinimized(true);
               }}
-              className="absolute -top-2 -right-2 bg-muted rounded-full p-1.5 hover:bg-destructive/20 transition-colors shadow-md"
+              className="absolute -top-2 -left-2 bg-muted rounded-full p-1.5 hover:bg-destructive/20 transition-colors shadow-md"
             >
               <X className="h-3 w-3" />
             </button>
@@ -511,131 +370,166 @@ export function StickFigureMascot() {
         )}
       </AnimatePresence>
 
-      {/* Stick Figure - Bigger */}
+      {/* Stick Figure */}
       <motion.div
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         className="cursor-pointer select-none"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        animate={isDancing ? { y: [0, -5, 0] } : {}}
-        transition={isDancing ? { duration: 0.4, repeat: Infinity } : {}}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        animate={isDancing ? { y: [0, -8, 0] } : { y: pose.body.y }}
+        transition={isDancing ? { duration: 0.35, repeat: Infinity } : { type: "spring" }}
       >
         <svg
-          width="80"
-          height="100"
-          viewBox="0 0 60 80"
-          className="drop-shadow-lg"
+          width="70"
+          height="90"
+          viewBox="0 0 70 90"
+          className="drop-shadow-lg overflow-visible"
         >
-          {/* Glow effect */}
           <defs>
-            <filter id="mascotGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="mascotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="hsl(var(--primary))" />
               <stop offset="100%" stopColor="hsl(var(--secondary))" />
             </linearGradient>
+            <filter id="mascotShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+            </filter>
           </defs>
 
-          {/* Body group */}
-          <g filter="url(#mascotGlow)">
-            {/* Shadow */}
-            <ellipse cx={30} cy={78} rx={12} ry={3} fill="hsl(var(--foreground) / 0.1)" />
+          <g filter="url(#mascotShadow)">
+            {/* Shadow on ground */}
+            <ellipse cx={35} cy={88} rx={15} ry={4} fill="hsl(var(--foreground) / 0.15)" />
             
             {/* Left Leg */}
             <motion.line
-              x1={30}
-              y1={50}
-              x2={18}
-              y2={72}
-              stroke="url(#bodyGradient)"
-              strokeWidth={4}
+              x1={35}
+              y1={58}
+              x2={22}
+              y2={82}
+              stroke="url(#mascotGradient)"
+              strokeWidth={5}
               strokeLinecap="round"
-              style={{ originX: "30px", originY: "50px" }}
               animate={{ rotate: pose.leftLeg.rotate }}
+              style={{ originX: "35px", originY: "58px" }}
               transition={{ type: "spring", stiffness: 300 }}
             />
 
             {/* Right Leg */}
             <motion.line
-              x1={30}
-              y1={50}
-              x2={42}
-              y2={72}
-              stroke="url(#bodyGradient)"
-              strokeWidth={4}
+              x1={35}
+              y1={58}
+              x2={48}
+              y2={82}
+              stroke="url(#mascotGradient)"
+              strokeWidth={5}
               strokeLinecap="round"
-              style={{ originX: "30px", originY: "50px" }}
               animate={{ rotate: pose.rightLeg.rotate }}
+              style={{ originX: "35px", originY: "58px" }}
               transition={{ type: "spring", stiffness: 300 }}
             />
 
             {/* Body */}
-            <motion.line
-              x1={30}
-              y1={28}
-              x2={30}
-              y2={50}
-              stroke="url(#bodyGradient)"
-              strokeWidth={4}
+            <line
+              x1={35}
+              y1={32}
+              x2={35}
+              y2={58}
+              stroke="url(#mascotGradient)"
+              strokeWidth={5}
               strokeLinecap="round"
-              animate={{ scaleY: pose.body.scaleY }}
-              style={{ originY: "50px" }}
             />
 
             {/* Left Arm */}
             <motion.line
-              x1={30}
-              y1={34}
-              x2={12}
-              y2={48}
-              stroke="url(#bodyGradient)"
-              strokeWidth={4}
+              x1={35}
+              y1={38}
+              x2={15}
+              y2={52}
+              stroke="url(#mascotGradient)"
+              strokeWidth={5}
               strokeLinecap="round"
-              style={{ originX: "30px", originY: "34px" }}
               animate={{ rotate: pose.leftArm.rotate }}
+              style={{ originX: "35px", originY: "38px" }}
               transition={{ type: "spring", stiffness: 300 }}
             />
 
             {/* Right Arm */}
             <motion.line
-              x1={30}
-              y1={34}
-              x2={48}
-              y2={48}
-              stroke="url(#bodyGradient)"
-              strokeWidth={4}
+              x1={35}
+              y1={38}
+              x2={55}
+              y2={52}
+              stroke="url(#mascotGradient)"
+              strokeWidth={5}
               strokeLinecap="round"
-              style={{ originX: "30px", originY: "34px" }}
               animate={{ rotate: pose.rightArm.rotate }}
+              style={{ originX: "35px", originY: "38px" }}
               transition={{ type: "spring", stiffness: 300 }}
             />
 
             {/* Head */}
             <motion.g
-              animate={{
-                x: pose.head.x,
-                y: pose.head.y,
-                rotate: pose.head.rotate,
-              }}
+              animate={{ rotate: pose.head.rotate }}
+              style={{ originX: "35px", originY: "18px" }}
               transition={{ type: "spring", stiffness: 300 }}
-              style={{ originX: "30px", originY: "15px" }}
             >
               <circle
-                cx={30}
-                cy={14}
-                r={14}
+                cx={35}
+                cy={18}
+                r={16}
                 fill="hsl(var(--primary))"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
               />
-              {/* Face */}
-              <Expression type={pose.expression} />
+              
+              {/* Face based on expression */}
+              {pose.expression === "smile" && (
+                <>
+                  <circle cx={29} cy={15} r={2.5} fill="hsl(var(--primary-foreground))" />
+                  <circle cx={41} cy={15} r={2.5} fill="hsl(var(--primary-foreground))" />
+                  <path d="M 27 22 Q 35 29 43 22" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
+                </>
+              )}
+              {pose.expression === "happy" && (
+                <>
+                  <path d="M 26 13 Q 29 11 32 15" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                  <path d="M 38 15 Q 41 11 44 13" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                  <path d="M 25 22 Q 35 31 45 22" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
+                </>
+              )}
+              {pose.expression === "excited" && (
+                <>
+                  <circle cx={29} cy={14} r={3} fill="hsl(var(--primary-foreground))" />
+                  <circle cx={41} cy={14} r={3} fill="hsl(var(--primary-foreground))" />
+                  <ellipse cx={35} cy={24} rx={5} ry={4} fill="hsl(var(--primary-foreground))" />
+                </>
+              )}
+              {pose.expression === "wow" && (
+                <>
+                  <circle cx={29} cy={13} r={3.5} fill="hsl(var(--primary-foreground))" />
+                  <circle cx={41} cy={13} r={3.5} fill="hsl(var(--primary-foreground))" />
+                  <ellipse cx={35} cy={24} rx={4} ry={5} fill="hsl(var(--primary-foreground))" />
+                </>
+              )}
+              {pose.expression === "thinking" && (
+                <>
+                  <circle cx={29} cy={15} r={2} fill="hsl(var(--primary-foreground))" />
+                  <circle cx={41} cy={13} r={2.5} fill="hsl(var(--primary-foreground))" />
+                  <path d="M 30 23 Q 35 21 40 23" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                </>
+              )}
+              {pose.expression === "cool" && (
+                <>
+                  <rect x={24} y={11} width={10} height={5} rx={2} fill="hsl(var(--primary-foreground))" />
+                  <rect x={36} y={11} width={10} height={5} rx={2} fill="hsl(var(--primary-foreground))" />
+                  <path d="M 29 23 Q 35 27 41 23" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                </>
+              )}
+              {pose.expression === "proud" && (
+                <>
+                  <path d="M 26 14 L 32 14" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                  <path d="M 38 14 L 44 14" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                  <path d="M 28 22 Q 35 28 42 22" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
+                </>
+              )}
             </motion.g>
           </g>
         </svg>
@@ -643,7 +537,7 @@ export function StickFigureMascot() {
         {/* Notification indicator */}
         {isMinimized && (
           <motion.div
-            className="absolute -top-1 right-0 bg-destructive rounded-full w-5 h-5 flex items-center justify-center shadow-lg"
+            className="absolute -top-1 -left-1 bg-destructive rounded-full w-5 h-5 flex items-center justify-center shadow-lg"
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
@@ -652,15 +546,15 @@ export function StickFigureMascot() {
         )}
       </motion.div>
 
-      {/* Click hints */}
+      {/* Click hint */}
       {isMinimized && (
         <motion.div
-          className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground whitespace-nowrap text-center"
+          className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground whitespace-nowrap text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 0] }}
           transition={{ duration: 4, repeat: Infinity, delay: 3 }}
         >
-          Click me! Double-click to dance!
+          Click me!
         </motion.div>
       )}
     </motion.div>
