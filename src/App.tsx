@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Preloader from "@/components/Preloader";
 import GlobalMascot from "@/components/GlobalMascot";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -25,6 +26,7 @@ const App = () => (
       <TooltipProvider>
         <Preloader />
         <GlobalMascot />
+        <FloatingWhatsApp />
         <Toaster />
         <Sonner />
         <BrowserRouter>
