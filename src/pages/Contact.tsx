@@ -45,16 +45,6 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <motion.div
-              animate={{ 
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="inline-block mb-6"
-            >
-              <span className="text-7xl">📞</span>
-            </motion.div>
             <h1 className="text-5xl md:text-7xl font-bold mb-4 tracking-wide">
               <span className="gradient-text">Contact Us</span>
             </h1>
