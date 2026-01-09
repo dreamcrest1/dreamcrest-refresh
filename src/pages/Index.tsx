@@ -9,7 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { InteractiveBackground } from "@/components/InteractiveBackground";
-import { CloudMascot } from "@/components/CloudMascot";
+import { ClippyMascot } from "@/components/ClippyMascot";
 // Floating WhatsApp Button
 function WhatsAppButton() {
   return (
@@ -500,7 +500,7 @@ export default function Index() {
       </main>
       <Footer />
       <WhatsAppButton />
-      <CloudMascot />
+      <ClippyMascot />
     </div>
   );
 }

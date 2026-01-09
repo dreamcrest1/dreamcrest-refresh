@@ -72,8 +72,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Orbitron", "Inter", "system-ui", "sans-serif"],
+        sans: ["'Space Grotesk'", "system-ui", "sans-serif"],
+        display: ["'Bebas Neue'", "'Space Grotesk'", "system-ui", "sans-serif"],
+        heading: ["'Righteous'", "'Bebas Neue'", "system-ui", "sans-serif"],
+        accent: ["'Bangers'", "cursive"],
       },
       keyframes: {
         "accordion-down": {
