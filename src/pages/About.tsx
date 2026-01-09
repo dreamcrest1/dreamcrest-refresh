@@ -50,7 +50,7 @@ export default function About() {
       <CursorTrail />
       <Header />
 
-      <main className="relative z-10 pt-24 pb-16">
+      <main className="relative z-10 pt-28 pb-16">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <motion.div

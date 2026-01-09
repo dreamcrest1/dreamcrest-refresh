@@ -19,7 +19,7 @@ export default function Refunds() {
       <Header />
       <FloatingWhatsApp />
 
-      <main className="relative z-10 pt-24 pb-16">
+      <main className="relative z-10 pt-28 pb-16">
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Page Header */}
           <motion.div
@@ -89,20 +89,20 @@ export default function Refunds() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.05 }}
                   whileHover={{ scale: 1.02, y: -2 }}
-                  className="frosted-button p-6 rounded-2xl text-left cursor-default"
+                  className="bg-card/90 backdrop-blur-sm border border-border p-6 rounded-2xl text-left cursor-default hover:border-primary/50 transition-all"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <IconComponent className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                      <h3 className="font-bold text-lg mb-2 flex items-center gap-2 text-foreground">
                         <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground flex items-center justify-center text-sm font-bold">
                           {index + 1}
                         </span>
                         {section.title}
                       </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{section.content}</p>
+                      <p className="text-foreground/80 text-sm leading-relaxed">{section.content}</p>
                     </div>
                   </div>
                 </motion.div>

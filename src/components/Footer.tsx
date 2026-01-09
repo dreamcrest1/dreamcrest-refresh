@@ -11,7 +11,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <img src={logo} alt="Dreamcrest" className="h-12 w-auto mb-4" />
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-foreground/80 text-sm mb-4">
               {siteConfig.tagline}
             </p>
             <div className="flex gap-3">
@@ -29,11 +29,11 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold text-foreground mb-4">Quick Links</h4>
             <ul className="space-y-2">
               {navLinks.map((link) => (
                 <li key={link.name}>
-                  <Link to={link.href} className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <Link to={link.href} className="text-foreground/70 hover:text-primary transition-colors text-sm">
                     {link.name}
                   </Link>
                 </li>
@@ -43,11 +43,11 @@ export function Footer() {
 
           {/* Sister Brands */}
           <div>
-            <h4 className="font-semibold mb-4">Our Brands</h4>
+            <h4 className="font-semibold text-foreground mb-4">Our Brands</h4>
             <ul className="space-y-2">
               {siteConfig.sisterBrands.map((brand) => (
                 <li key={brand.name}>
-                  <a href={brand.url} target="_blank" rel="noopener" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                  <a href={brand.url} target="_blank" rel="noopener" className="text-foreground/70 hover:text-primary transition-colors text-sm">
                     {brand.name}
                   </a>
                 </li>
@@ -57,8 +57,8 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Contact Us</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
+            <h4 className="font-semibold text-foreground mb-4">Contact Us</h4>
+            <ul className="space-y-3 text-sm text-foreground/70">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 text-primary" />
                 <span>{siteConfig.address.street}, {siteConfig.address.city}, {siteConfig.address.state} {siteConfig.address.pincode}</span>
@@ -75,7 +75,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
+        <div className="border-t border-border mt-8 pt-8 text-center text-sm text-foreground/60">
           <p>© {new Date().getFullYear()} Dreamcrest Solutions. All rights reserved.</p>
         </div>
       </div>

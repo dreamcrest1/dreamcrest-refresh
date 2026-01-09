@@ -37,7 +37,7 @@ export default function Contact() {
       <Header />
       <FloatingWhatsApp />
 
-      <main className="relative z-10 pt-24 pb-16">
+      <main className="relative z-10 pt-28 pb-16">
         <div className="container mx-auto px-4 max-w-6xl">
           {/* Page Header */}
           <motion.div
