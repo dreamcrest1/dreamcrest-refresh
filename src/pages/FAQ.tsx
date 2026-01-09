@@ -82,7 +82,7 @@ export default function FAQ() {
       <CursorTrail />
       <Header />
 
-      <main className="relative z-10 pt-24 pb-16">
+      <main className="relative z-10 pt-28 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Page Header */}
           <motion.div

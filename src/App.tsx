@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Preloader from "@/components/Preloader";
+import GlobalMascot from "@/components/GlobalMascot";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -21,6 +23,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="dreamcrest-theme">
       <TooltipProvider>
+        <Preloader />
+        <GlobalMascot />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -30,7 +34,7 @@ const App = () => (
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
-          <Route path="/faq" element={<FAQ />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/refunds" element={<Refunds />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogPost />} />
