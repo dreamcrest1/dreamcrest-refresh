@@ -1,6 +1,91 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
+// India Map SVG Path (simplified outline)
+const INDIA_PATH = "M 200 50 L 220 45 L 250 55 L 280 50 L 310 60 L 340 55 L 360 70 L 380 75 L 400 70 L 420 80 L 440 85 L 450 100 L 460 120 L 455 140 L 460 160 L 470 180 L 480 200 L 475 220 L 480 240 L 490 260 L 485 280 L 475 300 L 465 320 L 450 340 L 435 360 L 420 380 L 400 400 L 380 420 L 360 435 L 340 450 L 320 460 L 300 470 L 280 475 L 260 480 L 240 475 L 220 470 L 200 480 L 180 490 L 160 485 L 140 475 L 130 460 L 120 440 L 110 420 L 105 400 L 100 380 L 95 360 L 90 340 L 85 320 L 80 300 L 85 280 L 90 260 L 95 240 L 100 220 L 110 200 L 120 180 L 130 160 L 140 140 L 150 120 L 160 100 L 175 80 L 190 65 Z";
+
+// Animated India Map Background
+function IndiaMapBackground() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
+      <motion.svg
+        viewBox="0 0 600 600"
+        className="w-[80vw] h-[80vh] max-w-[800px] max-h-[800px] opacity-[0.03] dark:opacity-[0.08]"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2 }}
+      >
+        {/* Outer glow */}
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <linearGradient id="indiaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--primary))" />
+            <stop offset="100%" stopColor="hsl(var(--secondary))" />
+          </linearGradient>
+        </defs>
+        
+        {/* Animated India outline */}
+        <motion.path
+          d={INDIA_PATH}
+          fill="none"
+          stroke="url(#indiaGradient)"
+          strokeWidth="2"
+          filter="url(#glow)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 4, ease: "easeInOut" }}
+        />
+        
+        {/* Pulsing dots on major cities */}
+        {[
+          { cx: 280, cy: 130, name: "Delhi" },
+          { cx: 180, cy: 280, name: "Mumbai" },
+          { cx: 380, cy: 350, name: "Kolkata" },
+          { cx: 340, cy: 450, name: "Chennai" },
+          { cx: 260, cy: 380, name: "Bangalore" },
+        ].map((city, i) => (
+          <motion.circle
+            key={city.name}
+            cx={city.cx}
+            cy={city.cy}
+            r="4"
+            fill="hsl(var(--primary))"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ 
+              scale: [1, 1.5, 1],
+              opacity: [0.6, 1, 0.6]
+            }}
+            transition={{
+              duration: 2,
+              delay: 4 + i * 0.3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+        
+        {/* Connection lines between cities */}
+        <motion.path
+          d="M 280 130 L 180 280 L 260 380 L 340 450 L 380 350 L 280 130"
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="0.5"
+          strokeDasharray="5,5"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 0.3 }}
+          transition={{ duration: 3, delay: 5 }}
+        />
+      </motion.svg>
+    </div>
+  );
+}
+
 // Matrix rain effect
 function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,13 +104,13 @@ function MatrixRain() {
     resize();
     window.addEventListener("resize", resize);
 
-    const chars = "01アイウエオカキクケコサシスセソタチツテト";
-    const fontSize = 14;
+    const chars = "01";
+    const fontSize = 12;
     const columns = Math.floor(canvas.width / fontSize);
     const drops: number[] = Array(columns).fill(1);
 
     const draw = () => {
-      ctx.fillStyle = "rgba(10, 14, 39, 0.05)";
+      ctx.fillStyle = "rgba(10, 14, 39, 0.03)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = "hsl(18, 100%, 55%)";
@@ -33,10 +118,10 @@ function MatrixRain() {
 
       for (let i = 0; i < drops.length; i++) {
         const text = chars[Math.floor(Math.random() * chars.length)];
-        ctx.globalAlpha = Math.random() * 0.3;
+        ctx.globalAlpha = Math.random() * 0.15;
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
           drops[i] = 0;
         }
         drops[i]++;
@@ -44,7 +129,7 @@ function MatrixRain() {
       ctx.globalAlpha = 1;
     };
 
-    const interval = setInterval(draw, 50);
+    const interval = setInterval(draw, 60);
 
     return () => {
       clearInterval(interval);
@@ -55,16 +140,16 @@ function MatrixRain() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-30 dark:opacity-50"
+      className="fixed inset-0 pointer-events-none z-0 opacity-40 dark:opacity-60"
     />
   );
 }
 
 // Floating particles component
 function FloatingParticles() {
-  const particles = Array.from({ length: 50 }, (_, i) => ({
+  const particles = Array.from({ length: 40 }, (_, i) => ({
     id: i,
-    size: Math.random() * 6 + 2,
+    size: Math.random() * 5 + 2,
     x: Math.random() * 100,
     y: Math.random() * 100,
     duration: Math.random() * 20 + 15,
@@ -92,10 +177,10 @@ function FloatingParticles() {
             filter: "blur(1px)",
           }}
           animate={{
-            y: [0, -150, 0],
-            x: [0, Math.random() * 100 - 50, 0],
-            opacity: [0.2, 0.8, 0.2],
-            scale: [1, 1.5, 1],
+            y: [0, -120, 0],
+            x: [0, Math.random() * 80 - 40, 0],
+            opacity: [0.2, 0.7, 0.2],
+            scale: [1, 1.3, 1],
           }}
           transition={{
             duration: particle.duration,
@@ -112,12 +197,12 @@ function FloatingParticles() {
 // Floating geometric shapes
 function FloatingShapes() {
   const shapes = [
-    { type: "circle", size: 60, x: "10%", y: "20%", delay: 0 },
-    { type: "square", size: 40, x: "85%", y: "15%", delay: 2 },
-    { type: "triangle", size: 50, x: "75%", y: "70%", delay: 4 },
-    { type: "circle", size: 30, x: "20%", y: "80%", delay: 1 },
-    { type: "square", size: 25, x: "60%", y: "30%", delay: 3 },
-    { type: "circle", size: 45, x: "90%", y: "50%", delay: 5 },
+    { type: "circle", size: 50, x: "8%", y: "18%", delay: 0 },
+    { type: "square", size: 35, x: "88%", y: "12%", delay: 2 },
+    { type: "triangle", size: 45, x: "78%", y: "72%", delay: 4 },
+    { type: "circle", size: 25, x: "15%", y: "82%", delay: 1 },
+    { type: "square", size: 20, x: "55%", y: "25%", delay: 3 },
+    { type: "circle", size: 40, x: "92%", y: "48%", delay: 5 },
   ];
 
   return (
@@ -135,12 +220,12 @@ function FloatingShapes() {
             transform: shape.type === "triangle" ? "rotate(45deg)" : "none",
           }}
           animate={{
-            y: [0, -30, 0],
+            y: [0, -25, 0],
             rotate: [0, 360],
-            opacity: [0.2, 0.5, 0.2],
+            opacity: [0.15, 0.4, 0.15],
           }}
           transition={{
-            duration: 15 + i * 2,
+            duration: 18 + i * 2,
             delay: shape.delay,
             repeat: Infinity,
             ease: "easeInOut",
@@ -157,60 +242,39 @@ function CyberGrid() {
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {/* Perspective grid */}
       <div 
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08]"
+        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.06]"
         style={{
           backgroundImage: `
             linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
             linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px',
+          backgroundSize: '80px 80px',
           transform: 'perspective(500px) rotateX(60deg) translateY(-50%)',
           transformOrigin: 'center top',
         }}
       />
       
       {/* Animated scan lines */}
-      {[...Array(5)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute left-0 right-0 h-px"
+          className="absolute left-0 right-0 h-[2px]"
           style={{
-            background: `linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), transparent)`,
+            background: `linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent)`,
           }}
           initial={{ top: "-10%", opacity: 0 }}
           animate={{
             top: ["0%", "100%"],
-            opacity: [0, 0.6, 0],
+            opacity: [0, 0.5, 0],
           }}
           transition={{
-            duration: 8,
-            delay: i * 2,
+            duration: 10,
+            delay: i * 3,
             repeat: Infinity,
             ease: "linear",
           }}
         />
       ))}
-      
-      {/* Horizontal glowing lines */}
-      <div className="absolute inset-0">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent"
-            style={{ top: `${30 + i * 25}%` }}
-            animate={{
-              opacity: [0.1, 0.4, 0.1],
-              scaleX: [0.3, 1, 0.3],
-            }}
-            transition={{
-              duration: 5,
-              delay: i * 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -218,11 +282,10 @@ function CyberGrid() {
 // Glowing orbs
 function GlowingOrbs() {
   const orbs = [
-    { color: "primary", size: 500, x: "5%", y: "15%", blur: 120 },
-    { color: "secondary", size: 400, x: "85%", y: "55%", blur: 100 },
-    { color: "primary", size: 350, x: "50%", y: "85%", blur: 90 },
-    { color: "secondary", size: 300, x: "15%", y: "60%", blur: 80 },
-    { color: "primary", size: 250, x: "70%", y: "20%", blur: 70 },
+    { color: "primary", size: 450, x: "5%", y: "15%", blur: 100 },
+    { color: "secondary", size: 350, x: "88%", y: "55%", blur: 90 },
+    { color: "primary", size: 300, x: "50%", y: "88%", blur: 80 },
+    { color: "secondary", size: 250, x: "12%", y: "65%", blur: 70 },
   ];
 
   return (
@@ -241,50 +304,17 @@ function GlowingOrbs() {
             transform: 'translate(-50%, -50%)',
           }}
           animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.08, 0.15, 0.08],
-            x: [0, 30, 0],
-            y: [0, -20, 0],
+            scale: [1, 1.2, 1],
+            opacity: [0.06, 0.12, 0.06],
+            x: [0, 20, 0],
+            y: [0, -15, 0],
           }}
           transition={{
-            duration: 10 + i * 3,
+            duration: 12 + i * 3,
             repeat: Infinity,
             ease: "easeInOut",
           }}
         />
-      ))}
-    </div>
-  );
-}
-
-// Floating tech icons
-function FloatingIcons() {
-  const icons = ["💻", "🤖", "📺", "☁️", "🎬", "✨", "🚀", "⚡"];
-  
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {icons.map((icon, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-2xl opacity-20 dark:opacity-30"
-          style={{
-            left: `${10 + (i * 12)}%`,
-            top: `${20 + (i % 3) * 25}%`,
-          }}
-          animate={{
-            y: [0, -40, 0],
-            rotate: [0, 10, -10, 0],
-            opacity: [0.15, 0.3, 0.15],
-          }}
-          transition={{
-            duration: 8 + i,
-            delay: i * 0.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          {icon}
-        </motion.div>
       ))}
     </div>
   );
@@ -316,9 +346,9 @@ export function CursorTrail() {
         x: e.clientX, 
         y: e.clientY, 
         life: 1,
-        hue: 18 + Math.random() * 20 // Orange hue variations
+        hue: 18 + Math.random() * 15
       });
-      if (trailRef.current.length > 60) {
+      if (trailRef.current.length > 50) {
         trailRef.current.shift();
       }
     };
@@ -328,44 +358,26 @@ export function CursorTrail() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw connecting lines
-      if (trailRef.current.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(trailRef.current[0].x, trailRef.current[0].y);
-        trailRef.current.forEach((point, i) => {
-          if (i > 0 && point.life > 0) {
-            ctx.lineTo(point.x, point.y);
-          }
-        });
-        ctx.strokeStyle = `hsla(18, 100%, 55%, 0.15)`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
       // Draw trail points
       trailRef.current.forEach((point) => {
-        point.life -= 0.015;
+        point.life -= 0.02;
         if (point.life > 0) {
-          const alpha = point.life * 0.6;
-          const size = point.life * 10;
+          const alpha = point.life * 0.5;
+          const size = point.life * 8;
           
-          // Inner glow
           ctx.beginPath();
           ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${point.hue}, 100%, 60%, ${alpha})`;
+          ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha})`;
           ctx.fill();
 
-          // Outer glow
           ctx.beginPath();
-          ctx.arc(point.x, point.y, size * 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha * 0.3})`;
+          ctx.arc(point.x, point.y, size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha * 0.25})`;
           ctx.fill();
         }
       });
 
-      // Remove dead points
       trailRef.current = trailRef.current.filter((p) => p.life > 0);
-
       animationId = requestAnimationFrame(animate);
     };
     animate();
@@ -421,8 +433,8 @@ function TouchRipple() {
             transform: "translate(-50%, -50%)",
           }}
           initial={{ width: 0, height: 0, opacity: 1 }}
-          animate={{ width: 150, height: 150, opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          animate={{ width: 120, height: 120, opacity: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         />
       ))}
     </div>
@@ -433,16 +445,16 @@ function TouchRipple() {
 export function CyberBackground() {
   return (
     <>
+      <IndiaMapBackground />
       <GlowingOrbs />
       <CyberGrid />
       <FloatingParticles />
       <FloatingShapes />
-      <FloatingIcons />
       <MatrixRain />
       <TouchRipple />
       
       {/* Noise overlay */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]"
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.015]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
