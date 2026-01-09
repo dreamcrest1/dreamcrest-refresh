@@ -10,6 +10,8 @@ import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { InteractiveBackground } from "@/components/InteractiveBackground";
 import { StickFigureMascot } from "@/components/StickFigureMascot";
+import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
+
 // Floating WhatsApp Button
 function WhatsAppButton() {
   return (
@@ -496,6 +498,7 @@ export default function Index() {
         <DealOfTheWeek />
         <FeaturedProducts />
         <AboutSection />
+        <DeliveryProofsGallery />
         <BlogSection />
       </main>
       <Footer />

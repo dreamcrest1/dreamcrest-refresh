@@ -111,48 +111,48 @@ export const deliveryProofs = [
 
 export const refundPolicy = [
   {
-    title: "Eligible for Refund",
-    content: "Refunds are applicable only if the product or service is not delivered within the promised timeframe or if it is defective/not as described."
+    title: "All Sales Are Final",
+    content: "All purchases are final. We do not offer refunds under any circumstances, except as specifically mentioned in this policy."
   },
   {
-    title: "Refund Request Period",
-    content: "Customers must request a refund within 7 days of purchase. After this period, refund requests will not be accepted."
+    title: "Replacement for Non-Functional Services",
+    content: "If any OTT service is not working, we will provide a replacement or an alternative OTT service of similar value."
   },
   {
-    title: "Non-Refundable Items",
-    content: "Digital products that have already been delivered or activated (e.g., software keys, subscriptions) are non-refundable."
+    title: "No Refund After Order or Delivery",
+    content: "Once the service is ordered, taken, or delivered, we reserve the right to refuse any kind of refund request."
   },
   {
-    title: "Partial Refunds",
-    content: "In cases where a partial service has been rendered, only a partial refund will be issued."
+    title: "Warranty on Lifetime Services",
+    content: "Services labeled as \"lifetime\" come with a 1-year warranty. If the service stops working after the warranty period (e.g., after 1.5 years), we will not be able to offer support or replacement."
   },
   {
-    title: "Refund Processing Time",
-    content: "Refunds will be processed within 7-10 business days after approval."
+    title: "Annual Maintenance Charges (AMC)",
+    content: "Some lifetime services may include an AMC (Annual Maintenance Charge) to keep our operations sustainable. The AMC will range from 25% to 30% of the original service price."
   },
   {
-    title: "How to Request a Refund",
-    content: "Contact us via email at dreamcrestsolutions@gmail.com with your order details and reason for the refund request."
+    title: "Refund Eligibility",
+    content: "Refunds are only applicable if: The product/service is not delivered to you, or the product/service is out of stock."
   },
   {
-    title: "Chargebacks",
-    content: "Initiating a chargeback without contacting us first may result in account suspension and denial of future services."
+    title: "OEM Policy Dependency",
+    content: "We are service providers, not developers or OEMs (Original Equipment Manufacturers). Our policies may change in accordance with OEM policy updates."
   },
   {
-    title: "Exceptions",
-    content: "In rare cases, exceptions may be made at the discretion of Dreamcrest Solutions management."
+    title: "Mass Service Disruptions",
+    content: "In the event of mass bans or service disruptions (e.g., Prime Video, Netflix), we will provide free replacements wherever applicable."
   },
   {
-    title: "Currency",
-    content: "All refunds will be processed in the same currency as the original payment."
-  },
-  {
-    title: "Contact Support",
-    content: "For any refund-related queries, please contact our support team via WhatsApp or email."
+    title: "Technical Downtime Compensation",
+    content: "If a service is non-functional due to technical or backend issues, we will compensate by extending your service validity to cover the downtime experienced."
   },
   {
     title: "Policy Updates",
-    content: "Dreamcrest Solutions reserves the right to modify this refund policy at any time without prior notice."
+    content: "We reserve the right to modify this policy at any time, based on business needs or external conditions."
+  },
+  {
+    title: "Affordable Pricing & Service Quality",
+    content: "As we offer services at a fraction of the original price, minor issues may occasionally occur. However, we are committed to delivering the best possible service experience and timely support."
   },
 ];
 
