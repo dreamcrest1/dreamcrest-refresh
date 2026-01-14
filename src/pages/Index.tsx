@@ -210,42 +210,50 @@ function DealOfTheWeek() {
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {dealOfTheWeek.slice(0, 5).map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}
-              className="product-card group"
-            >
-              <div className="relative overflow-hidden rounded-lg mb-3">
-                <motion.span 
-                  className="discount-badge"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
-                  {product.discount}% OFF
-                </motion.span>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-image w-full h-32 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = getCategoryFallback(product.category);
+            <Link key={product.id} to={`/product/${product.id}`} className="block">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5 }}
+                className="product-card group cursor-pointer h-full"
+              >
+                <div className="relative overflow-hidden rounded-lg mb-3">
+                  <motion.span 
+                    className="discount-badge"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    {product.discount}% OFF
+                  </motion.span>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="product-image w-full h-32 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = getCategoryFallback(product.category);
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-primary font-medium">{product.category}</span>
+                <h3 className="font-medium mt-1 mb-2 text-sm line-clamp-2">{product.name}</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-base font-bold text-primary">{formatPrice(product.salePrice)}</span>
+                  <span className="text-xs text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
+                </div>
+                <Button 
+                  className="w-full btn-glow" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(product.externalUrl, '_blank');
                   }}
-                />
-              </div>
-              <span className="text-xs text-primary font-medium">{product.category}</span>
-              <h3 className="font-medium mt-1 mb-2 text-sm line-clamp-2">{product.name}</h3>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base font-bold text-primary">{formatPrice(product.salePrice)}</span>
-                <span className="text-xs text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
-              </div>
-              <a href={product.externalUrl} target="_blank" rel="noopener">
-                <Button className="w-full btn-glow" size="sm">Buy Now</Button>
-              </a>
-            </motion.div>
+                >
+                  Buy Now
+                </Button>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
@@ -275,43 +283,51 @@ function FeaturedProducts() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredProducts.slice(0, 8).map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: i * 0.05, type: "spring" }}
-              viewport={{ once: true }}
-              whileHover={{ y: -8 }}
-              className="product-card group"
-            >
-              <div className="relative overflow-hidden rounded-lg mb-4">
-                <motion.span 
-                  className="discount-badge"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  {product.discount}% OFF
-                </motion.span>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-image w-full h-48 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = getCategoryFallback(product.category);
+            <Link key={product.id} to={`/product/${product.id}`} className="block">
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: i * 0.05, type: "spring" }}
+                viewport={{ once: true }}
+                whileHover={{ y: -8 }}
+                className="product-card group cursor-pointer h-full"
+              >
+                <div className="relative overflow-hidden rounded-lg mb-4">
+                  <motion.span 
+                    className="discount-badge"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {product.discount}% OFF
+                  </motion.span>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="product-image w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = getCategoryFallback(product.category);
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-xs text-primary font-medium">{product.category}</span>
+                <h3 className="font-semibold mt-1 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{product.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{product.description}</p>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg font-bold text-primary">{formatPrice(product.salePrice)}</span>
+                  <span className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
+                </div>
+                <Button 
+                  className="w-full btn-glow" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(product.externalUrl, '_blank');
                   }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <span className="text-xs text-primary font-medium">{product.category}</span>
-              <h3 className="font-semibold mt-1 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{product.name}</h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{product.description}</p>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg font-bold text-primary">{formatPrice(product.salePrice)}</span>
-                <span className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
-              </div>
-              <a href={product.externalUrl} target="_blank" rel="noopener">
-                <Button className="w-full btn-glow" size="sm">Buy Now</Button>
-              </a>
-            </motion.div>
+                >
+                  Buy Now
+                </Button>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
