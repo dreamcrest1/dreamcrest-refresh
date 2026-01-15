@@ -30,6 +30,75 @@ function stripHtml(html: string) {
     .trim();
 }
 
+function removeEmojis(input: string) {
+  // Broad emoji/symbol ranges; safe no-op if none.
+  return input.replace(
+    /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,
+    ""
+  );
+}
+
+function normalizeSentence(input: string) {
+  const s = input.replace(/\s+/g, " ").trim();
+  if (!s) return "";
+  // Ensure a professional ending.
+  return /[.!?]$/.test(s) ? s : `${s}.`;
+}
+
+function stripBoilerplate(input: string) {
+  let s = input;
+
+  // Remove URLs and obvious CTA boilerplate.
+  s = s.replace(/https?:\/\/\S+/gi, "");
+  s = s.replace(/\b(whatsapp|telegram|dm|inbox|contact us|call us|chat now)\b.*$/i, "");
+
+  // Remove common ecommerce/export boilerplate.
+  const boilerplatePatterns: RegExp[] = [
+    /\b(refund|returns?|money[- ]back|guarantee)\b.*$/i,
+    /\b(terms?|conditions?|disclaimer)\b.*$/i,
+    /\b(shipping|delivery)\b.*$/i,
+    /\b(support|customer support)\b.*$/i,
+  ];
+  for (const p of boilerplatePatterns) s = s.replace(p, "");
+
+  return s.trim();
+}
+
+function deDuplicateName(input: string, name: string) {
+  if (!input) return "";
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Remove standalone occurrences of the product name to avoid repetition.
+  return input.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "").replace(/\s{2,}/g, " ").trim();
+}
+
+function optimizeDescription(params: { name: string; category: string; raw: string; maxChars?: number }) {
+  const maxChars = params.maxChars ?? 160;
+
+  let s = stripHtml(params.raw);
+  s = removeEmojis(s);
+  s = stripBoilerplate(s);
+  s = deDuplicateName(s, params.name);
+
+  // Keep to a single paragraph.
+  s = s.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
+
+  // SEO-enhance without adding new claims: ensure category keyword appears.
+  if (params.category && !new RegExp(`\\b${params.category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(s)) {
+    s = s ? `${s} (${params.category})` : `${params.category}: ${params.name}`;
+  }
+
+  s = normalizeSentence(s);
+
+  // Hard cap for mobile cards/snippets.
+  if (s.length > maxChars) {
+    s = s.slice(0, maxChars - 1).trimEnd();
+    s = s.replace(/[\s,;:-]+$/g, "");
+    s = `${s}…`;
+  }
+
+  return s;
+}
+
 function toNumber(value: string) {
   const cleaned = (value ?? "").toString().replace(/[^0-9.]/g, "");
   const n = Number(cleaned);
@@ -69,14 +138,20 @@ export const products: Product[] = rows
     const id = toNumber(r["ID"]);
     const name = r["Name"] || "Untitled";
 
-    const shortDesc = r["Short description"];
-    const fullDesc = r["Description"];
-    const description = stripHtml(shortDesc || fullDesc || "");
-
     const salePrice = toNumber(r["Sale price"]);
     const regularPrice = toNumber(r["Regular price"]);
 
     const category = firstCategory(r["Categories"]);
+
+    const shortDesc = r["Short description"];
+    const fullDesc = r["Description"];
+    const description = optimizeDescription({
+      name,
+      category,
+      raw: shortDesc || fullDesc || "",
+      maxChars: 160,
+    });
+
     const image = firstImage(r["Images"]);
     const externalUrl = r["External URL"] || "";
     const featured = (r["Is featured?"] ?? "") === "1";
