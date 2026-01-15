@@ -2,6 +2,25 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 
+const DISMISS_KEY = "dreamcrest_mascot_dismissed";
+
+function getDismissedFromStorage() {
+  try {
+    return localStorage.getItem(DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setDismissedInStorage(value: boolean) {
+  try {
+    if (value) localStorage.setItem(DISMISS_KEY, "1");
+    else localStorage.removeItem(DISMISS_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 // Content database
 const content = {
   quotes: [
@@ -63,19 +82,76 @@ const content = {
 
 // Poses for stick figure
 const poses = {
-  idle: { body: { y: 0 }, head: { rotate: 0 }, leftArm: { rotate: -20 }, rightArm: { rotate: 20 }, leftLeg: { rotate: 8 }, rightLeg: { rotate: -8 }, expression: "smile" },
-  wave: { body: { y: 0 }, head: { rotate: 5 }, leftArm: { rotate: -20 }, rightArm: { rotate: -150 }, leftLeg: { rotate: 0 }, rightLeg: { rotate: 0 }, expression: "happy" },
-  dance1: { body: { y: -3 }, head: { rotate: -15 }, leftArm: { rotate: -70 }, rightArm: { rotate: 70 }, leftLeg: { rotate: 30 }, rightLeg: { rotate: -30 }, expression: "excited" },
-  dance2: { body: { y: -3 }, head: { rotate: 15 }, leftArm: { rotate: 70 }, rightArm: { rotate: -70 }, leftLeg: { rotate: -30 }, rightLeg: { rotate: 30 }, expression: "excited" },
-  excited: { body: { y: -5 }, head: { rotate: 0 }, leftArm: { rotate: -160 }, rightArm: { rotate: 160 }, leftLeg: { rotate: 15 }, rightLeg: { rotate: -15 }, expression: "wow" },
-  thinking: { body: { y: 0 }, head: { rotate: 20 }, leftArm: { rotate: -30 }, rightArm: { rotate: -100 }, leftLeg: { rotate: 5 }, rightLeg: { rotate: 0 }, expression: "thinking" },
-  jumping: { body: { y: -12 }, head: { rotate: 0 }, leftArm: { rotate: -130 }, rightArm: { rotate: 130 }, leftLeg: { rotate: -35 }, rightLeg: { rotate: 35 }, expression: "wow" },
+  idle: {
+    body: { y: 0 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -20 },
+    rightArm: { rotate: 20 },
+    leftLeg: { rotate: 8 },
+    rightLeg: { rotate: -8 },
+    expression: "smile",
+  },
+  wave: {
+    body: { y: 0 },
+    head: { rotate: 5 },
+    leftArm: { rotate: -20 },
+    rightArm: { rotate: -150 },
+    leftLeg: { rotate: 0 },
+    rightLeg: { rotate: 0 },
+    expression: "happy",
+  },
+  dance1: {
+    body: { y: -3 },
+    head: { rotate: -15 },
+    leftArm: { rotate: -70 },
+    rightArm: { rotate: 70 },
+    leftLeg: { rotate: 30 },
+    rightLeg: { rotate: -30 },
+    expression: "excited",
+  },
+  dance2: {
+    body: { y: -3 },
+    head: { rotate: 15 },
+    leftArm: { rotate: 70 },
+    rightArm: { rotate: -70 },
+    leftLeg: { rotate: -30 },
+    rightLeg: { rotate: 30 },
+    expression: "excited",
+  },
+  excited: {
+    body: { y: -5 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -160 },
+    rightArm: { rotate: 160 },
+    leftLeg: { rotate: 15 },
+    rightLeg: { rotate: -15 },
+    expression: "wow",
+  },
+  thinking: {
+    body: { y: 0 },
+    head: { rotate: 20 },
+    leftArm: { rotate: -30 },
+    rightArm: { rotate: -100 },
+    leftLeg: { rotate: 5 },
+    rightLeg: { rotate: 0 },
+    expression: "thinking",
+  },
+  jumping: {
+    body: { y: -12 },
+    head: { rotate: 0 },
+    leftArm: { rotate: -130 },
+    rightArm: { rotate: 130 },
+    leftLeg: { rotate: -35 },
+    rightLeg: { rotate: 35 },
+    expression: "wow",
+  },
 };
 
 type PoseKey = keyof typeof poses;
 
 export function GlobalMascot() {
-  const [isMinimized, setIsMinimized] = useState(false); // Start open
+  const [dismissed, setDismissed] = useState<boolean>(() => getDismissedFromStorage());
+  const [isMinimized, setIsMinimized] = useState<boolean>(() => getDismissedFromStorage());
   const [currentPose, setCurrentPose] = useState<PoseKey>("wave");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<string>("greeting");
@@ -88,33 +164,36 @@ export function GlobalMascot() {
     return { text: items[Math.floor(Math.random() * items.length)], type };
   }, []);
 
-  // Show greeting on mount
+  // Show greeting on mount (unless dismissed)
   useEffect(() => {
+    if (dismissed) return;
     const greeting = content.greetings[Math.floor(Math.random() * content.greetings.length)];
     setMessage(greeting);
     setMessageType("greeting");
     setCurrentPose("wave");
     setTimeout(() => setCurrentPose("idle"), 2000);
-  }, []);
+  }, [dismissed]);
 
-  // Auto-change quotes every 12 seconds
+  // Auto-change quotes every 12 seconds (unless dismissed)
   useEffect(() => {
+    if (dismissed) return;
+
     const interval = setInterval(() => {
       const { text, type } = getRandomContent();
       setMessage(text);
       setMessageType(type);
-      
+
       const actions: PoseKey[] = ["excited", "thinking", "jumping"];
       const action = actions[Math.floor(Math.random() * actions.length)];
       setCurrentPose(action);
       setTimeout(() => setCurrentPose("idle"), 1500);
-      
-      // Ensure bubble is visible
+
+      // Ensure bubble is visible (only if not dismissed)
       setIsMinimized(false);
     }, 12000);
 
     return () => clearInterval(interval);
-  }, [getRandomContent]);
+  }, [dismissed, getRandomContent]);
 
   // Dancing animation
   useEffect(() => {
@@ -128,10 +207,16 @@ export function GlobalMascot() {
       setIsDancing(false);
       setCurrentPose("idle");
     }, 4000);
-    return () => { clearInterval(interval); clearTimeout(timeout); };
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [isDancing]);
 
   const handleClick = () => {
+    // User asked: after clicking X, the mascot should not show info again.
+    if (dismissed) return;
+
     if (isMinimized) {
       setIsMinimized(false);
       const { text, type } = getRandomContent();
@@ -142,31 +227,48 @@ export function GlobalMascot() {
       setMessage(text);
       setMessageType(type);
     }
+
     const reactions: PoseKey[] = ["excited", "jumping", "wave"];
     setCurrentPose(reactions[Math.floor(Math.random() * reactions.length)]);
     setTimeout(() => setCurrentPose("idle"), 1500);
   };
 
   const handleDoubleClick = () => {
+    if (dismissed) return;
     setIsDancing(true);
     setIsMinimized(false);
     setMessage("Let's dance! 💃🕺");
     setMessageType("fun");
   };
 
+  const handleDismiss = () => {
+    setDismissed(true);
+    setDismissedInStorage(true);
+    setIsMinimized(true);
+  };
+
   const pose = poses[currentPose];
 
   const getTypeLabel = () => {
     switch (messageType) {
-      case "quotes": return { label: "💭 Quote", color: "text-primary" };
-      case "trivia": return { label: "🎯 Trivia", color: "text-blue-500" };
-      case "gk": return { label: "📚 GK", color: "text-green-500" };
-      case "techNews": return { label: "🤖 Tech News", color: "text-purple-500" };
-      case "funFacts": return { label: "✨ Fun Fact", color: "text-yellow-500" };
-      case "jokes": return { label: "😂 Joke", color: "text-pink-500" };
-      case "greeting": return { label: "👋 Hello!", color: "text-primary" };
-      case "fun": return { label: "🎉 Party!", color: "text-secondary" };
-      default: return { label: "💬 Message", color: "text-muted-foreground" };
+      case "quotes":
+        return { label: "💭 Quote", color: "text-primary" };
+      case "trivia":
+        return { label: "🎯 Trivia", color: "text-blue-500" };
+      case "gk":
+        return { label: "📚 GK", color: "text-green-500" };
+      case "techNews":
+        return { label: "🤖 Tech News", color: "text-purple-500" };
+      case "funFacts":
+        return { label: "✨ Fun Fact", color: "text-yellow-500" };
+      case "jokes":
+        return { label: "😂 Joke", color: "text-pink-500" };
+      case "greeting":
+        return { label: "👋 Hello!", color: "text-primary" };
+      case "fun":
+        return { label: "🎉 Party!", color: "text-secondary" };
+      default:
+        return { label: "💬 Message", color: "text-muted-foreground" };
     }
   };
 
@@ -181,7 +283,7 @@ export function GlobalMascot() {
     >
       {/* Speech bubble */}
       <AnimatePresence>
-        {!isMinimized && message && (
+        {!dismissed && !isMinimized && message && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -201,8 +303,12 @@ export function GlobalMascot() {
               <div className="absolute -bottom-2 right-10 w-4 h-4 bg-card/95 border-r border-b border-border rotate-45" />
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDismiss();
+              }}
               className="absolute -top-2 -left-2 bg-muted rounded-full p-1.5 hover:bg-destructive/20 transition-colors shadow-md"
+              aria-label="Close mascot"
             >
               <X className="h-3 w-3" />
             </button>
@@ -227,41 +333,109 @@ export function GlobalMascot() {
               <stop offset="100%" stopColor="hsl(var(--secondary))" />
             </linearGradient>
             <filter id="mascotShadowGlobal" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3"/>
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
             </filter>
           </defs>
 
           <g filter="url(#mascotShadowGlobal)">
             <ellipse cx={35} cy={88} rx={15} ry={4} fill="hsl(var(--foreground) / 0.15)" />
-            
-            <motion.line x1={35} y1={58} x2={22} y2={82} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round"
-              animate={{ rotate: pose.leftLeg.rotate }} style={{ originX: "35px", originY: "58px" }} transition={{ type: "spring", stiffness: 300 }} />
-            <motion.line x1={35} y1={58} x2={48} y2={82} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round"
-              animate={{ rotate: pose.rightLeg.rotate }} style={{ originX: "35px", originY: "58px" }} transition={{ type: "spring", stiffness: 300 }} />
-            <line x1={35} y1={32} x2={35} y2={58} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round" />
-            <motion.line x1={35} y1={38} x2={15} y2={52} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round"
-              animate={{ rotate: pose.leftArm.rotate }} style={{ originX: "35px", originY: "38px" }} transition={{ type: "spring", stiffness: 300 }} />
-            <motion.line x1={35} y1={38} x2={55} y2={52} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round"
-              animate={{ rotate: pose.rightArm.rotate }} style={{ originX: "35px", originY: "38px" }} transition={{ type: "spring", stiffness: 300 }} />
 
-            <motion.g animate={{ rotate: pose.head.rotate }} style={{ originX: "35px", originY: "18px" }} transition={{ type: "spring", stiffness: 300 }}>
+            <motion.line
+              x1={35}
+              y1={58}
+              x2={22}
+              y2={82}
+              stroke="url(#mascotGradientGlobal)"
+              strokeWidth={5}
+              strokeLinecap="round"
+              animate={{ rotate: pose.leftLeg.rotate }}
+              style={{ originX: "35px", originY: "58px" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            />
+            <motion.line
+              x1={35}
+              y1={58}
+              x2={48}
+              y2={82}
+              stroke="url(#mascotGradientGlobal)"
+              strokeWidth={5}
+              strokeLinecap="round"
+              animate={{ rotate: pose.rightLeg.rotate }}
+              style={{ originX: "35px", originY: "58px" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            />
+            <line x1={35} y1={32} x2={35} y2={58} stroke="url(#mascotGradientGlobal)" strokeWidth={5} strokeLinecap="round" />
+            <motion.line
+              x1={35}
+              y1={38}
+              x2={15}
+              y2={52}
+              stroke="url(#mascotGradientGlobal)"
+              strokeWidth={5}
+              strokeLinecap="round"
+              animate={{ rotate: pose.leftArm.rotate }}
+              style={{ originX: "35px", originY: "38px" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            />
+            <motion.line
+              x1={35}
+              y1={38}
+              x2={55}
+              y2={52}
+              stroke="url(#mascotGradientGlobal)"
+              strokeWidth={5}
+              strokeLinecap="round"
+              animate={{ rotate: pose.rightArm.rotate }}
+              style={{ originX: "35px", originY: "38px" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            />
+
+            <motion.g
+              animate={{ rotate: pose.head.rotate }}
+              style={{ originX: "35px", originY: "18px" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <ellipse cx={35} cy={4} rx={20} ry={4} fill="hsl(var(--secondary))" />
               <rect x={22} y={-10} width={26} height={14} rx={3} fill="hsl(var(--secondary))" />
               <rect x={27} y={-6} width={16} height={3} fill="hsl(var(--primary))" />
               <circle cx={35} cy={18} r={16} fill="hsl(var(--primary))" />
-              
+
               {pose.expression === "smile" && (
                 <>
                   <circle cx={29} cy={15} r={2.5} fill="hsl(var(--primary-foreground))" />
                   <circle cx={41} cy={15} r={2.5} fill="hsl(var(--primary-foreground))" />
-                  <path d="M 27 22 Q 35 29 43 22" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
+                  <path
+                    d="M 27 22 Q 35 29 43 22"
+                    fill="none"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                  />
                 </>
               )}
               {pose.expression === "happy" && (
                 <>
-                  <path d="M 26 14 Q 29 12 32 14" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-                  <path d="M 38 14 Q 41 12 44 14" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
-                  <path d="M 26 22 Q 35 30 44 22" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2.5} strokeLinecap="round" />
+                  <path
+                    d="M 26 14 Q 29 12 32 14"
+                    fill="none"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 38 14 Q 41 12 44 14"
+                    fill="none"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 26 22 Q 35 30 44 22"
+                    fill="none"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                  />
                 </>
               )}
               {pose.expression === "excited" && (
@@ -282,7 +456,13 @@ export function GlobalMascot() {
                 <>
                   <circle cx={29} cy={15} r={2.5} fill="hsl(var(--primary-foreground))" />
                   <circle cx={41} cy={13} r={2.5} fill="hsl(var(--primary-foreground))" />
-                  <path d="M 30 23 Q 35 21 40 23" fill="none" stroke="hsl(var(--primary-foreground))" strokeWidth={2} strokeLinecap="round" />
+                  <path
+                    d="M 30 23 Q 35 21 40 23"
+                    fill="none"
+                    stroke="hsl(var(--primary-foreground))"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  />
                 </>
               )}
             </motion.g>
