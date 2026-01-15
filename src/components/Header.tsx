@@ -78,7 +78,7 @@ export function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] md:hidden bg-background/70 backdrop-blur-sm"
+              className="fixed inset-0 z-[60] md:hidden bg-background/85 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
             <motion.div
@@ -86,15 +86,15 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 20 }}
-              className="fixed top-0 right-0 bottom-0 z-[70] md:hidden w-[85vw] max-w-80 bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+              className="fixed top-0 right-0 bottom-0 z-[70] md:hidden w-[85vw] max-w-80 bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col isolate"
             >
-              <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center justify-between p-4 border-b border-border bg-card">
                 <span className="font-semibold">Menu</span>
                 <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                   <X className="h-5 w-5" />
                 </Button>
               </div>
-              <nav className="p-4 space-y-2">
+              <nav className="flex-1 overflow-y-auto p-4 space-y-2 bg-card">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
