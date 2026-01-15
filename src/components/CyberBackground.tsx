@@ -207,8 +207,17 @@ function IndiaMapBackground() {
 // Matrix rain effect
 function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    const desktop = window.matchMedia?.("(min-width: 768px)")?.matches ?? true;
+    setEnabled(!reduceMotion && desktop);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -224,36 +233,40 @@ function MatrixRain() {
 
     const chars = "01";
     const fontSize = 12;
-    const columns = Math.floor(canvas.width / fontSize);
-    const drops: number[] = Array(columns).fill(1);
 
     const draw = () => {
+      const columns = Math.floor(canvas.width / fontSize);
+      const drops: number[] = (draw as any).drops ?? Array(columns).fill(1);
+      (draw as any).drops = drops.length === columns ? drops : Array(columns).fill(1);
+
       ctx.fillStyle = "rgba(10, 14, 39, 0.03)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = "hsl(18, 100%, 55%)";
       ctx.font = `${fontSize}px monospace`;
 
-      for (let i = 0; i < drops.length; i++) {
+      for (let i = 0; i < (draw as any).drops.length; i++) {
         const text = chars[Math.floor(Math.random() * chars.length)];
         ctx.globalAlpha = Math.random() * 0.15;
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        ctx.fillText(text, i * fontSize, (draw as any).drops[i] * fontSize);
 
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
-          drops[i] = 0;
+        if ((draw as any).drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
+          (draw as any).drops[i] = 0;
         }
-        drops[i]++;
+        (draw as any).drops[i]++;
       }
       ctx.globalAlpha = 1;
     };
 
-    const interval = setInterval(draw, 60);
+    const interval = window.setInterval(draw, 60);
 
     return () => {
-      clearInterval(interval);
+      window.clearInterval(interval);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <canvas
@@ -443,8 +456,17 @@ export function CursorTrail() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const trailRef = useRef<{ x: number; y: number; life: number; hue: number }[]>([]);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    const desktop = window.matchMedia?.("(min-width: 768px)")?.matches ?? true;
+    setEnabled(!reduceMotion && desktop);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -460,11 +482,11 @@ export function CursorTrail() {
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
-      trailRef.current.push({ 
-        x: e.clientX, 
-        y: e.clientY, 
+      trailRef.current.push({
+        x: e.clientX,
+        y: e.clientY,
         life: 1,
-        hue: 18 + Math.random() * 15
+        hue: 18 + Math.random() * 15,
       });
       if (trailRef.current.length > 50) {
         trailRef.current.shift();
@@ -481,7 +503,7 @@ export function CursorTrail() {
         if (point.life > 0) {
           const alpha = point.life * 0.5;
           const size = point.life * 8;
-          
+
           ctx.beginPath();
           ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
           ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha})`;
@@ -504,14 +526,11 @@ export function CursorTrail() {
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [enabled]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-50 hidden md:block"
-    />
-  );
+  if (!enabled) return null;
+
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-50" />;
 }
 
 // Touch ripple effect for mobile

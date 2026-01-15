@@ -6,18 +6,53 @@ export function Preloader() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => setIsLoading(false), 300);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 100);
+    const startedAt = Date.now();
+    const minVisibleMs = 450;
 
-    return () => clearInterval(timer);
+    let raf = 0;
+    let done = false;
+
+    const markDone = () => {
+      done = true;
+    };
+
+    // If the document is already loaded, don't hold the preloader.
+    if (document.readyState === "complete") {
+      markDone();
+    } else {
+      window.addEventListener("load", markDone, { once: true });
+    }
+
+    const tick = () => {
+      setProgress((p) => {
+        if (done) return 100;
+        // Ease towards 92% while waiting for load event
+        const next = p + (92 - p) * 0.06;
+        return Math.min(next, 92);
+      });
+
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    raf = window.requestAnimationFrame(tick);
+
+    const finishInterval = window.setInterval(() => {
+      if (!done) return;
+
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minVisibleMs) return;
+
+      setProgress(100);
+      window.setTimeout(() => setIsLoading(false), 200);
+      window.clearInterval(finishInterval);
+      window.cancelAnimationFrame(raf);
+    }, 60);
+
+    return () => {
+      window.removeEventListener("load", markDone);
+      window.clearInterval(finishInterval);
+      window.cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (

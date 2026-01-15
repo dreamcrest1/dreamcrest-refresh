@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check } from "lucide-react";
@@ -12,6 +13,11 @@ import { siteConfig } from "@/data/siteData";
 export default function ProductDetail() {
   const { id } = useParams();
   const product = products.find((p) => p.id === Number(id));
+
+  // Make sure product detail always starts at the top when navigating between products.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [id]);
 
   if (!product) {
     return (
