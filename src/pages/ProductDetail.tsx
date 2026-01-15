@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check } from "lucide-react";
+import { ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ExpandableText } from "@/components/ExpandableText";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
@@ -105,7 +106,11 @@ export default function ProductDetail() {
 
               <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
 
-              <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
+              <ExpandableText
+                text={product.longDescription || product.description}
+                collapsedChars={220}
+                className="mb-6"
+              />
 
               {/* Price */}
               <div className="flex items-center gap-4 mb-6">

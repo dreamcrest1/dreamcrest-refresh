@@ -4,6 +4,7 @@ export interface Product {
   id: number;
   name: string;
   description: string;
+  longDescription?: string;
   salePrice: number;
   regularPrice: number;
   category: string;
@@ -18,15 +19,15 @@ export interface Product {
 import productsCsvRaw from "./products-export.csv?raw";
 
 function stripHtml(html: string) {
-  return html
-    .replace(/<br\s*\/?\s*>/gi, "\n")
+  return (html ?? "")
+    // Replace <br> with spaces so UI doesn't show ugly newlines.
+    .replace(/<br\s*\/?\s*>/gi, " ")
     .replace(/<[^>]*>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
-    .replace(/\s+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/\s{2,}/g, " ")
     .trim();
 }
 
@@ -71,26 +72,59 @@ function deDuplicateName(input: string, name: string) {
   return input.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "").replace(/\s{2,}/g, " ").trim();
 }
 
-function optimizeDescription(params: { name: string; category: string; raw: string; maxChars?: number }) {
+function seoSnippetFromName(name: string, category: string) {
+  const cat = (category || "").trim();
+  const lowerCat = cat.toLowerCase();
+
+  if (lowerCat.includes("ott") || lowerCat.includes("stream")) {
+    return `Explore ${name} pricing and streaming plan details. Compare options and grab the best available deal link. (${cat})`;
+  }
+  if (lowerCat.includes("ai")) {
+    return `Explore ${name} pricing and key highlights. Compare options and get the best available deal link. (${cat})`;
+  }
+  if (lowerCat.includes("windows") || lowerCat.includes("office")) {
+    return `Explore ${name} pricing and license details. Compare options and get the best available deal link. (${cat})`;
+  }
+  return `Explore ${name} pricing and key details. Compare options and get the best available deal link. (${cat || "Software"})`;
+}
+
+function optimizeDescription(params: {
+  name: string;
+  category: string;
+  raw: string;
+  maxChars?: number;
+  allowLong?: boolean;
+}) {
   const maxChars = params.maxChars ?? 160;
 
   let s = stripHtml(params.raw);
+
+  // Handle *literal* backslash-n sequences coming from CSV exports.
+  s = s.replace(/\\n/g, " ").replace(/\\r/g, " ");
+
   s = removeEmojis(s);
   s = stripBoilerplate(s);
   s = deDuplicateName(s, params.name);
 
   // Keep to a single paragraph.
-  s = s.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
+  s = s.replace(/[\r\n]+/g, " ").replace(/\s{2,}/g, " ").trim();
+
+  // If still empty/ugly, generate a clean SEO-safe snippet from name/category.
+  if (!s || s.length < 40) {
+    s = seoSnippetFromName(params.name, params.category);
+  }
 
   // SEO-enhance without adding new claims: ensure category keyword appears.
-  if (params.category && !new RegExp(`\\b${params.category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(s)) {
+  if (
+    params.category &&
+    !new RegExp(`\\b${params.category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(s)
+  ) {
     s = s ? `${s} (${params.category})` : `${params.category}: ${params.name}`;
   }
 
   s = normalizeSentence(s);
 
-  // Hard cap for mobile cards/snippets.
-  if (s.length > maxChars) {
+  if (!params.allowLong && s.length > maxChars) {
     s = s.slice(0, maxChars - 1).trimEnd();
     s = s.replace(/[\s,;:-]+$/g, "");
     s = `${s}…`;
@@ -130,6 +164,11 @@ function calcDiscount(regularPrice: number, salePrice: number) {
   return Math.round(((regularPrice - salePrice) / regularPrice) * 100);
 }
 
+const priceOverridesById: Record<number, Partial<Pick<Product, "salePrice" | "regularPrice">>> = {
+  // Fix: Open AI Sora should be ₹399, not ₹1
+  1722: { salePrice: 399 },
+};
+
 const { rows } = parseCsv(productsCsvRaw);
 
 export const products: Product[] = rows
@@ -138,28 +177,43 @@ export const products: Product[] = rows
     const id = toNumber(r["ID"]);
     const name = r["Name"] || "Untitled";
 
-    const salePrice = toNumber(r["Sale price"]);
-    const regularPrice = toNumber(r["Regular price"]);
+    const salePriceRaw = toNumber(r["Sale price"]);
+    const regularPriceRaw = toNumber(r["Regular price"]);
 
     const category = firstCategory(r["Categories"]);
 
     const shortDesc = r["Short description"];
     const fullDesc = r["Description"];
+    const rawDesc = shortDesc || fullDesc || "";
+
     const description = optimizeDescription({
       name,
       category,
-      raw: shortDesc || fullDesc || "",
+      raw: rawDesc,
       maxChars: 160,
+    });
+
+    const longDescription = optimizeDescription({
+      name,
+      category,
+      raw: rawDesc,
+      maxChars: 480,
+      allowLong: true,
     });
 
     const image = firstImage(r["Images"]);
     const externalUrl = r["External URL"] || "";
     const featured = (r["Is featured?"] ?? "") === "1";
 
+    const override = priceOverridesById[id] || {};
+    const salePrice = override.salePrice ?? salePriceRaw;
+    const regularPrice = override.regularPrice ?? regularPriceRaw;
+
     return {
       id,
       name,
       description,
+      longDescription,
       salePrice,
       regularPrice,
       category,
