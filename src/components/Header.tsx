@@ -86,7 +86,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 20 }}
-              className="fixed top-0 right-0 bottom-0 z-[70] md:hidden w-[85vw] max-w-80 bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col isolate"
+              className="fixed inset-y-0 right-0 left-0 z-[70] md:hidden w-full bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col isolate sm:left-auto sm:w-[85vw] sm:max-w-80"
             >
               <div className="flex items-center justify-between p-4 border-b border-border bg-card">
                 <span className="font-semibold">Menu</span>
