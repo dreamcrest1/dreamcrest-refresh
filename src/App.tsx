@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Preloader from "@/components/Preloader";
-import GlobalMascot from "@/components/GlobalMascot";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -35,7 +34,7 @@ const App = () => (
     <ThemeProvider defaultTheme="dark" storageKey="dreamcrest-theme">
       <TooltipProvider>
         <Preloader />
-        <GlobalMascot />
+        
         <FloatingWhatsApp />
         <Toaster />
         <Sonner />
