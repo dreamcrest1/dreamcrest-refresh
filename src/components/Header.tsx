@@ -32,7 +32,15 @@ export function Header() {
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Dreamcrest" className="h-8 md:h-10 w-auto" />
+            <img
+              src={logo}
+              alt="Dreamcrest"
+              width={160}
+              height={40}
+              className="h-8 md:h-10 w-auto"
+              loading="eager"
+              decoding="async"
+            />
           </Link>
 
           {/* Desktop Navigation */}
