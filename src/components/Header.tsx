@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, Search } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Menu, X, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { navLinks, siteConfig } from "@/data/siteData";
+import { navLinks } from "@/data/siteData";
 import logo from "@/assets/dreamcrest-logo.png";
 
 export function Header() {
@@ -70,49 +71,53 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] md:hidden bg-background/85 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 20 }}
-              className="fixed inset-y-0 right-0 left-0 z-[70] md:hidden w-full bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col isolate sm:left-auto sm:w-[85vw] sm:max-w-80"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-border bg-card">
-                <span className="font-semibold">Menu</span>
-                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <nav className="flex-1 overflow-y-auto p-4 space-y-2 bg-card">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    className="block py-3 px-4 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-                <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full mt-4">Shop Now</Button>
-                </Link>
-              </nav>
-            </motion.div>
-          </>
+      {/* Mobile Menu (ported to body to prevent cropping by header styles) */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[60] md:hidden bg-background/85 backdrop-blur-sm"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 20 }}
+                  className="fixed inset-y-0 right-0 z-[70] md:hidden w-full bg-card border-l border-border shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col isolate sm:w-[85vw] sm:max-w-80"
+                >
+                  <div className="flex items-center justify-between p-4 border-b border-border bg-card">
+                    <span className="font-semibold">Menu</span>
+                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <nav className="flex-1 overflow-y-auto p-4 space-y-2 bg-card">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.name}
+                        to={link.href}
+                        className="block py-3 px-4 rounded-lg hover:bg-muted transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                    <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full mt-4">Shop Now</Button>
+                    </Link>
+                  </nav>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </header>
   );
 }
