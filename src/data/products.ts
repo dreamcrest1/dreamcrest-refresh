@@ -206,8 +206,15 @@ export const products: Product[] = rows
     const featured = (r["Is featured?"] ?? "") === "1";
 
     const override = priceOverridesById[id] || {};
-    const salePrice = override.salePrice ?? salePriceRaw;
-    const regularPrice = override.regularPrice ?? regularPriceRaw;
+    let salePrice = override.salePrice ?? salePriceRaw;
+    let regularPrice = override.regularPrice ?? regularPriceRaw;
+
+    // Fix bad/missing prices from CSV exports.
+    // If sale is missing/0 but regular exists -> treat regular as the sale price
+    // so we never show ₹0 in UI.
+    if (salePrice <= 0 && regularPrice > 0) salePrice = regularPrice;
+    // If regular is missing but sale exists -> keep regular equal to sale.
+    if (regularPrice <= 0 && salePrice > 0) regularPrice = salePrice;
 
     return {
       id,

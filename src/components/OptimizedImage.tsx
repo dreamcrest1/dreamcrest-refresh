@@ -30,14 +30,14 @@ function webpCandidate(src: string) {
   if (src.startsWith("data:")) return "";
   if (src.endsWith(".webp")) return src;
 
-  // Unsplash supports output format selection.
+  // Use WebP only for sources we know support it reliably.
+  // (The previous "swap .jpg/.png -> .webp" heuristic can cause flicker
+  // when the origin doesn't actually serve WebP variants.)
   if (src.includes("images.unsplash.com")) {
     return withQuery(src, { auto: "format", fm: "webp" });
   }
 
-  // Best-effort extension swap (works if your CDN/origin provides .webp variants).
-  const replaced = src.replace(/\.(png|jpe?g)(\?.*)?$/i, ".webp$2");
-  return replaced === src ? "" : replaced;
+  return "";
 }
 
 export function OptimizedImage({
