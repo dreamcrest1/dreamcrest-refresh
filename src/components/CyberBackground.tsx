@@ -454,9 +454,12 @@ function GlowingOrbs() {
 // Cursor trail effect (desktop only)
 export function CursorTrail() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const trailRef = useRef<{ x: number; y: number; life: number; hue: number }[]>([]);
   const [enabled, setEnabled] = useState(false);
+
+  // Smooth "thread" positions
+  const targetRef = useRef({ x: 0, y: 0 });
+  const posRef = useRef({ x: 0, y: 0 });
+  const pointsRef = useRef<{ x: number; y: number; life: number }[]>([]);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
@@ -474,52 +477,100 @@ export function CursorTrail() {
     if (!ctx) return;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener("resize", resize);
 
+    let hasPointer = false;
     const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-      trailRef.current.push({
-        x: e.clientX,
-        y: e.clientY,
-        life: 1,
-        hue: 18 + Math.random() * 15,
-      });
-      if (trailRef.current.length > 50) {
-        trailRef.current.shift();
+      targetRef.current.x = e.clientX;
+      targetRef.current.y = e.clientY;
+      if (!hasPointer) {
+        hasPointer = true;
+        posRef.current.x = e.clientX;
+        posRef.current.y = e.clientY;
       }
     };
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
-    let animationId: number;
+    let animationId = 0;
+    const hue = 18; // keep brand-orange-ish
+
+    const drawThread = (pts: { x: number; y: number; life: number }[]) => {
+      if (pts.length < 2) return;
+
+      // Core thread
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // Build a smooth path using quadratic curves between midpoints
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+
+      for (let i = 1; i < pts.length - 1; i++) {
+        const midX = (pts[i].x + pts[i + 1].x) / 2;
+        const midY = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+      }
+      const last = pts[pts.length - 1];
+      ctx.lineTo(last.x, last.y);
+
+      const alpha = Math.min(0.75, Math.max(0.15, pts[0].life));
+      ctx.strokeStyle = `hsla(${hue}, 100%, 55%, ${alpha})`;
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = `hsla(${hue}, 100%, 55%, 0.45)`;
+      ctx.shadowBlur = 14;
+      ctx.stroke();
+
+      // Outer soft glow
+      ctx.shadowBlur = 28;
+      ctx.lineWidth = 9;
+      ctx.strokeStyle = `hsla(${hue}, 100%, 55%, ${alpha * 0.12})`;
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Ease current position toward target for a smooth "thread" feel
+      const ease = 0.22;
+      posRef.current.x += (targetRef.current.x - posRef.current.x) * ease;
+      posRef.current.y += (targetRef.current.y - posRef.current.y) * ease;
 
-      trailRef.current.forEach((point) => {
-        point.life -= 0.02;
-        if (point.life > 0) {
-          const alpha = point.life * 0.5;
-          const size = point.life * 8;
-
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha})`;
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, size * 2, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${point.hue}, 100%, 55%, ${alpha * 0.25})`;
-          ctx.fill();
+      // Add points at a controlled rate to avoid jitter
+      if (hasPointer) {
+        const pts = pointsRef.current;
+        const last = pts[pts.length - 1];
+        const dx = last ? posRef.current.x - last.x : 999;
+        const dy = last ? posRef.current.y - last.y : 999;
+        if (!last || dx * dx + dy * dy > 36) {
+          pts.push({ x: posRef.current.x, y: posRef.current.y, life: 1 });
         }
-      });
+        if (pts.length > 40) pts.shift();
+      }
 
-      trailRef.current = trailRef.current.filter((p) => p.life > 0);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      // Fade life (tail)
+      pointsRef.current.forEach((p, idx) => {
+        // older points fade faster
+        p.life -= 0.03 + idx * 0.0006;
+      });
+      pointsRef.current = pointsRef.current.filter((p) => p.life > 0);
+
+      drawThread(pointsRef.current);
       animationId = requestAnimationFrame(animate);
     };
-    animate();
+
+    animationId = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -529,54 +580,8 @@ export function CursorTrail() {
   }, [enabled]);
 
   if (!enabled) return null;
-
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-50" />;
 }
-
-// Touch ripple effect for mobile
-function TouchRipple() {
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-
-  useEffect(() => {
-    const handleTouch = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (touch) {
-        const newRipple = {
-          id: Date.now(),
-          x: touch.clientX,
-          y: touch.clientY,
-        };
-        setRipples((prev) => [...prev, newRipple]);
-        setTimeout(() => {
-          setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
-        }, 1000);
-      }
-    };
-
-    window.addEventListener("touchstart", handleTouch);
-    return () => window.removeEventListener("touchstart", handleTouch);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50 md:hidden">
-      {ripples.map((ripple) => (
-        <motion.div
-          key={ripple.id}
-          className="absolute rounded-full border-2 border-primary"
-          style={{
-            left: ripple.x,
-            top: ripple.y,
-            transform: "translate(-50%, -50%)",
-          }}
-          initial={{ width: 0, height: 0, opacity: 1 }}
-          animate={{ width: 120, height: 120, opacity: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        />
-      ))}
-    </div>
-  );
-}
-
 // Main background component
 export function CyberBackground() {
   return (
@@ -587,8 +592,7 @@ export function CyberBackground() {
       <FloatingParticles />
       <FloatingShapes />
       <MatrixRain />
-      <TouchRipple />
-      
+
       {/* Noise overlay */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.015]"
         style={{

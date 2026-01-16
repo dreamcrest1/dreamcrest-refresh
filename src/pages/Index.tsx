@@ -9,7 +9,6 @@ import { products, categories, featuredProducts, dealOfTheWeek, formatPrice } fr
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
-import { InteractiveBackground } from "@/components/InteractiveBackground";
 import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
 
 // Hero Section with enhanced animations
@@ -491,7 +490,6 @@ export default function Index() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <CyberBackground />
       <CursorTrail />
-      <InteractiveBackground />
       <Header />
       <main className="relative z-10">
         <HeroSection />
