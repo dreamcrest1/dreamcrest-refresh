@@ -3,6 +3,10 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from "lucide-react"
 import { siteConfig, navLinks } from "@/data/siteData";
 import logo from "@/assets/dreamcrest-logo.png";
 
+function buildEmail(parts: string[]) {
+  return parts.join("");
+}
+
 export function Footer() {
   return (
     <footer className="bg-card border-t border-border mt-16 md:mt-20">
@@ -69,7 +73,14 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary flex-shrink-0" />
-                <a href={`mailto:${siteConfig.contact.email}`} className="hover:text-primary break-all">{siteConfig.contact.email}</a>
+                {(() => {
+                  const email = buildEmail(["dreamcrestsolutions", "@", "gmail", ".com"]);
+                  return (
+                    <a href={`mailto:${email}`} className="hover:text-primary break-all">
+                      {email}
+                    </a>
+                  );
+                })()}
               </li>
             </ul>
           </div>

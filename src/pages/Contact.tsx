@@ -1,10 +1,28 @@
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, MessageCircle, Star, Rocket, Wrench, Youtube, Instagram, ExternalLink, Sparkles, Globe, Package } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  MessageCircle,
+  Star,
+  Rocket,
+  Wrench,
+  Youtube,
+  Instagram,
+  ExternalLink,
+  Sparkles,
+  Globe,
+  Package,
+} from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { siteConfig } from "@/data/siteData";
+
+function buildEmail(parts: string[]) {
+  return parts.join("");
+}
 
 export default function Contact() {
   const sisterBrands = [
@@ -28,7 +46,10 @@ export default function Contact() {
     { number: "+91 80030 78749", whatsapp: "918003078749" },
   ];
   
-  const emails = ["dreamcrestsolutions@gmail.com", "dreamstarott@gmail.com"];
+  const emails = [
+    buildEmail(["dreamcrestsolutions", "@", "gmail", ".com"]),
+    buildEmail(["dreamstarott", "@", "gmail", ".com"]),
+  ];
 
   return (
     <div className="min-h-screen bg-background noise-overlay">
