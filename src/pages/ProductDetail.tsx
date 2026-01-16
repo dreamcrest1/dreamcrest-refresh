@@ -5,6 +5,7 @@ import { ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check } from "luc
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExpandableText } from "@/components/ExpandableText";
+import OptimizedImage from "@/components/OptimizedImage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
@@ -80,10 +81,15 @@ export default function ProductDetail() {
               className="relative"
             >
               <div className="aspect-square rounded-2xl overflow-hidden bg-card border border-border">
-                <img
+                <OptimizedImage
                   src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  width={900}
+                  height={900}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = getCategoryFallback(product.category);
                   }}
@@ -204,10 +210,14 @@ export default function ProductDetail() {
                     className="group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all"
                   >
                     <div className="aspect-square overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={relProduct.image}
                         alt={relProduct.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        width={600}
+                        height={600}
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = getCategoryFallback(relProduct.category);
                         }}

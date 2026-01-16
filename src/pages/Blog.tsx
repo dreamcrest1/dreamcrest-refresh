@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
+import OptimizedImage from "@/components/OptimizedImage";
 
 import blogNetflixImg from "@/assets/blog-netflix-household.webp";
 import blogDreamtoolsImg from "@/assets/blog-dreamtools.webp";
@@ -101,10 +102,14 @@ export default function Blog() {
               >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
+                  <OptimizedImage
                     src={post.image}
                     alt={post.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    width={720}
+                    height={288}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute top-3 left-3">
                     <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">

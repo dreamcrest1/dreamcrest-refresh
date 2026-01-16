@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { Button } from "@/components/ui/button";
+import OptimizedImage from "@/components/OptimizedImage";
 
 import blogNetflixImg from "@/assets/blog-netflix-household.webp";
 import blogDreamtoolsImg from "@/assets/blog-dreamtools.webp";
@@ -109,10 +110,15 @@ export default function BlogPost() {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl overflow-hidden mb-8"
           >
-            <img
+            <OptimizedImage
               src={post.image}
               alt={post.title}
               className="w-full h-64 md:h-96 object-cover"
+              width={1200}
+              height={600}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
             />
           </motion.div>
 

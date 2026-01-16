@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import OptimizedImage from "@/components/OptimizedImage";
 import { heroSlides, siteConfig, blogPosts } from "@/data/siteData";
 import { getCategoryFallback } from "@/data/products";
 import { products, categories, featuredProducts, dealOfTheWeek, formatPrice } from "@/data/products";
@@ -227,10 +228,14 @@ function DealOfTheWeek() {
                   >
                     {product.discount}% OFF
                   </motion.span>
-                  <img
+                  <OptimizedImage
                     src={product.image}
                     alt={product.name}
                     className="product-image w-full h-32 object-cover"
+                    width={320}
+                    height={128}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.currentTarget.src = getCategoryFallback(product.category);
                     }}
@@ -299,10 +304,14 @@ function FeaturedProducts() {
                   >
                     {product.discount}% OFF
                   </motion.span>
-                  <img
+                  <OptimizedImage
                     src={product.image}
                     alt={product.name}
                     className="product-image w-full h-48 object-cover"
+                    width={480}
+                    height={192}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.currentTarget.src = getCategoryFallback(product.category);
                     }}

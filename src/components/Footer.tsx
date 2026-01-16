@@ -14,7 +14,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {/* Brand */}
           <div>
-            <img src={logo} alt="Dreamcrest" className="h-12 w-auto mb-4" />
+            <img src={logo} alt="Dreamcrest" width={200} height={48} loading="lazy" decoding="async" className="h-12 w-auto mb-4" />
             <p className="text-foreground text-sm mb-4">
               {siteConfig.tagline}
             </p>
