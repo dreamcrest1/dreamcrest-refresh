@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/providers/AuthProvider";
 import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminSiteContent from "@/pages/admin/AdminSiteContent";
+import AdminBlog from "@/pages/admin/AdminBlog";
+import AdminMediaLinks from "@/pages/admin/AdminMediaLinks";
 
 type Tab = "products" | "site" | "blog" | "media";
 
@@ -65,13 +68,10 @@ export default function AdminShell() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {tab === "products" ? (
-                    <AdminProducts />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      This section will be wired up next.
-                    </p>
-                  )}
+                  {tab === "products" && <AdminProducts />}
+                  {tab === "site" && <AdminSiteContent />}
+                  {tab === "blog" && <AdminBlog />}
+                  {tab === "media" && <AdminMediaLinks />}
                 </CardContent>
               </Card>
             </section>

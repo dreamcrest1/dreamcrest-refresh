@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,9 @@ export default function AdminProducts() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DbProduct | null>(null);
   const [importing, setImporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [draftOrder, setDraftOrder] = useState<DbProduct[]>([]);
+  const [dragId, setDragId] = useState<string | null>(null);
 
   const productsQuery = useQuery({
     queryKey: ["admin", "products"],
@@ -86,6 +90,28 @@ export default function AdminProducts() {
   });
 
   const sorted = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+
+  useEffect(() => {
+    setDraftOrder(sorted);
+    // If data set changed, drop selections that no longer exist.
+    setSelectedIds((prev) => {
+      const next = new Set<string>();
+      const ids = new Set(sorted.map((p) => p.id));
+      for (const id of prev) if (ids.has(id)) next.add(id);
+      return next;
+    });
+  }, [sorted]);
+
+  const hasOrderChanges = useMemo(() => {
+    if (draftOrder.length !== sorted.length) return false;
+    for (let i = 0; i < draftOrder.length; i++) {
+      if (draftOrder[i]?.id !== sorted[i]?.id) return true;
+    }
+    return false;
+  }, [draftOrder, sorted]);
+
+  const selected = useMemo(() => Array.from(selectedIds), [selectedIds]);
+  const allSelected = draftOrder.length > 0 && selectedIds.size === draftOrder.length;
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -172,13 +198,152 @@ export default function AdminProducts() {
     }
   };
 
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async (input: { ids: string[]; patch: Partial<Pick<DbProduct, "published" | "featured">> }) => {
+      if (!input.ids.length) return;
+      const { error } = await supabase.from("products").update(input.patch).in("id", input.ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast({ title: "Updated", description: "Bulk update applied." });
+      setSelectedIds(new Set());
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Update failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!ids.length) return;
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast({ title: "Deleted", description: "Selected products deleted." });
+      setSelectedIds(new Set());
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Delete failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const saveOrderMutation = useMutation({
+    mutationFn: async (rows: DbProduct[]) => {
+      // Update only sort_order. Use UPDATE per row to avoid accidental null overwrites.
+      const updates = rows.map((p, idx) => ({ id: p.id, sort_order: idx }));
+      const BATCH = 25;
+      for (let i = 0; i < updates.length; i += BATCH) {
+        const batch = updates.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map(async (u) => {
+            const { error } = await supabase.from("products").update({ sort_order: u.sort_order }).eq("id", u.id);
+            if (error) throw error;
+          })
+        );
+      }
+    },
+    onSuccess: async () => {
+      toast({ title: "Saved", description: "Order updated." });
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Save failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(() => {
+      if (!checked) return new Set();
+      return new Set(draftOrder.map((p) => p.id));
+    });
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const moveByDrag = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    setDraftOrder((prev) => {
+      const next = [...prev];
+      const from = next.findIndex((p) => p.id === sourceId);
+      const to = next.findIndex((p) => p.id === targetId);
+      if (from < 0 || to < 0) return prev;
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-muted-foreground">
           Manage products shown on your public Products pages.
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {selected.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => bulkUpdateMutation.mutate({ ids: selected, patch: { published: true } })}
+                disabled={bulkUpdateMutation.isPending}
+              >
+                Publish
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => bulkUpdateMutation.mutate({ ids: selected, patch: { published: false } })}
+                disabled={bulkUpdateMutation.isPending}
+              >
+                Hide
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => bulkUpdateMutation.mutate({ ids: selected, patch: { featured: true } })}
+                disabled={bulkUpdateMutation.isPending}
+              >
+                Feature
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => bulkUpdateMutation.mutate({ ids: selected, patch: { featured: false } })}
+                disabled={bulkUpdateMutation.isPending}
+              >
+                Unfeature
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  const ok = window.confirm(`Delete ${selected.length} selected products?`);
+                  if (!ok) return;
+                  bulkDeleteMutation.mutate(selected);
+                }}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+
+          {hasOrderChanges && (
+            <Button
+              variant="outline"
+              onClick={() => saveOrderMutation.mutate(draftOrder)}
+              disabled={saveOrderMutation.isPending}
+            >
+              {saveOrderMutation.isPending ? "Saving…" : "Save order"}
+            </Button>
+          )}
+
           <Button variant="outline" onClick={importFromCsv} disabled={importing}>
             {importing ? "Importing…" : "Import CSV"}
           </Button>
@@ -188,10 +353,18 @@ export default function AdminProducts() {
         </div>
       </div>
 
+      <div className="text-xs text-muted-foreground">
+        Tip: drag the grip handle to reorder rows, then click <span className="font-medium">Save order</span>.
+      </div>
+
       <div className="rounded-lg border bg-card/50 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[48px]">
+                <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Select all" />
+              </TableHead>
+              <TableHead className="w-[44px]" />
               <TableHead className="w-[90px]">ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead className="hidden md:table-cell">Category</TableHead>
@@ -200,8 +373,38 @@ export default function AdminProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorted.map((p) => (
-              <TableRow key={p.id}>
+            {draftOrder.map((p) => (
+              <TableRow
+                key={p.id}
+                onDragOver={(e) => {
+                  if (!dragId) return;
+                  e.preventDefault();
+                }}
+                onDrop={() => {
+                  if (!dragId) return;
+                  moveByDrag(dragId, p.id);
+                  setDragId(null);
+                }}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.has(p.id)}
+                    onCheckedChange={(v) => toggleOne(p.id, Boolean(v))}
+                    aria-label={`Select ${p.name}`}
+                  />
+                </TableCell>
+                <TableCell>
+                  <button
+                    type="button"
+                    draggable
+                    onDragStart={() => setDragId(p.id)}
+                    onDragEnd={() => setDragId(null)}
+                    className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground"
+                    aria-label="Drag to reorder"
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </button>
+                </TableCell>
                 <TableCell className="font-mono text-xs">{p.legacy_id ?? "—"}</TableCell>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
@@ -236,9 +439,9 @@ export default function AdminProducts() {
                 </TableCell>
               </TableRow>
             ))}
-            {!productsQuery.isLoading && (sorted?.length ?? 0) === 0 && (
+            {!productsQuery.isLoading && (draftOrder?.length ?? 0) === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
                   No products yet.
                 </TableCell>
               </TableRow>
