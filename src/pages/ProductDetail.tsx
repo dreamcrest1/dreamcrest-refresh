@@ -9,19 +9,35 @@ import OptimizedImage from "@/components/OptimizedImage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
-import { products, formatPrice, getCategoryFallback, getProductsByCategory } from "@/data/products";
+import { useQuery } from "@tanstack/react-query";
+import { formatPrice, getCategoryFallback } from "@/data/products";
+import { getPublishedProductByLegacyId, listPublishedProducts } from "@/lib/db/publicProducts";
 import { siteConfig } from "@/data/siteData";
+import { stripHtml } from "@/lib/text/stripHtml";
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === Number(id));
+  const legacyId = Number(id);
+
+  const productQuery = useQuery({
+    queryKey: ["public", "product", legacyId],
+    enabled: Number.isFinite(legacyId) && legacyId > 0,
+    queryFn: () => getPublishedProductByLegacyId(legacyId),
+  });
+
+  const allProductsQuery = useQuery({
+    queryKey: ["public", "products"],
+    queryFn: listPublishedProducts,
+  });
+
+  const product = productQuery.data;
 
   // Make sure product detail always starts at the top when navigating between products.
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [id]);
 
-  if (!product) {
+  if (!productQuery.isLoading && !product) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -34,11 +50,28 @@ export default function ProductDetail() {
     );
   }
 
-  const relatedProducts = getProductsByCategory(
-    product.category.toLowerCase().replace(/\s+/g, "-")
-  )
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4);
+  const relatedProducts = (allProductsQuery.data ?? [])
+    .filter((p) => p.category === product.category)
+    .filter((p) => p.legacy_id !== product.legacy_id)
+    .slice(0, 4)
+    .map((p) => {
+      const regularPrice = Number(p.regular_price ?? 0);
+      const salePrice = Number(p.sale_price ?? 0);
+      const discount =
+        regularPrice > 0 && salePrice > 0 && salePrice < regularPrice
+          ? Math.round(((regularPrice - salePrice) / regularPrice) * 100)
+          : 0;
+      return {
+        id: p.legacy_id ? Number(p.legacy_id) : 0,
+        name: p.name,
+        salePrice,
+        regularPrice,
+        category: p.category,
+        image: p.image_url,
+        discount,
+      };
+    })
+    .filter((p) => p.id > 0);
 
   const features = [
     { icon: ShieldCheck, text: "100% Genuine Product" },
@@ -82,7 +115,7 @@ export default function ProductDetail() {
             >
               <div className="aspect-square rounded-2xl overflow-hidden bg-card border border-border">
                 <OptimizedImage
-                  src={product.image}
+                  src={product.image_url}
                   alt={product.name}
                   className="w-full h-full object-cover"
                   width={900}
@@ -96,7 +129,13 @@ export default function ProductDetail() {
                 />
               </div>
               <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground text-lg px-4 py-2">
-                {product.discount}% OFF
+                {(() => {
+                  const regularPrice = Number(product.regular_price ?? 0);
+                  const salePrice = Number(product.sale_price ?? 0);
+                  return regularPrice > 0 && salePrice > 0 && salePrice < regularPrice
+                    ? `${Math.round(((regularPrice - salePrice) / regularPrice) * 100)}% OFF`
+                    : "Deal";
+                })()}
               </Badge>
             </motion.div>
 
@@ -113,7 +152,7 @@ export default function ProductDetail() {
               <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
 
               <ExpandableText
-                text={product.longDescription || product.description}
+                text={stripHtml(product.long_description || product.description)}
                 collapsedChars={220}
                 className="mb-6"
               />
@@ -121,13 +160,13 @@ export default function ProductDetail() {
               {/* Price */}
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-4xl font-bold text-primary">
-                  {formatPrice(product.salePrice)}
+                  {formatPrice(Number(product.sale_price ?? 0))}
                 </span>
                 <span className="text-xl text-muted-foreground line-through">
-                  {formatPrice(product.regularPrice)}
+                  {formatPrice(Number(product.regular_price ?? 0))}
                 </span>
                 <Badge variant="destructive" className="text-sm">
-                  Save {formatPrice(product.regularPrice - product.salePrice)}
+                  Save {formatPrice(Number(product.regular_price ?? 0) - Number(product.sale_price ?? 0))}
                 </Badge>
               </div>
 
@@ -170,7 +209,7 @@ export default function ProductDetail() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href={product.externalUrl}
+                  href={product.external_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"

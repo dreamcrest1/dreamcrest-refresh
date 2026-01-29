@@ -31,6 +31,12 @@ import { cn } from "@/lib/utils";
 
 import type { DbProduct } from "@/lib/db/products";
 import { deleteProductAdmin, listProductsAdmin, upsertProductAdmin } from "@/lib/db/products";
+import { parseWooProductsCsv } from "@/lib/import/productsFromWooCsv";
+import { supabase } from "@/integrations/supabase/client";
+
+// Exported by Vite as a raw string at build time.
+// eslint-disable-next-line import/no-unresolved
+import productsImportCsvRaw from "@/data/products-import.csv?raw";
 
 const productSchema = z.object({
   id: z.string().optional(),
@@ -72,6 +78,7 @@ export default function AdminProducts() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DbProduct | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const productsQuery = useQuery({
     queryKey: ["admin", "products"],
@@ -136,15 +143,49 @@ export default function AdminProducts() {
     setOpen(true);
   };
 
+  const importFromCsv = async () => {
+    setImporting(true);
+    try {
+      const parsed = parseWooProductsCsv(productsImportCsvRaw);
+      if (!parsed.length) {
+        toast({ title: "Nothing to import", description: "No published products found in CSV." });
+        return;
+      }
+
+      const BATCH = 200;
+      for (let i = 0; i < parsed.length; i += BATCH) {
+        const batch = parsed.slice(i, i + BATCH);
+        const { error } = await supabase.from("products").upsert(batch, { onConflict: "legacy_id" });
+        if (error) throw error;
+      }
+
+      toast({ title: "Import complete", description: `Imported ${parsed.length} products from CSV.` });
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    } catch (err: any) {
+      toast({
+        title: "Import failed",
+        description: err?.message ?? "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-muted-foreground">
           Manage products shown on your public Products pages.
         </div>
-        <Button onClick={startCreate} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={importFromCsv} disabled={importing}>
+            {importing ? "Importing…" : "Import CSV"}
+          </Button>
+          <Button onClick={startCreate} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card/50 overflow-hidden">
