@@ -80,6 +80,90 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          page_path: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      popups: {
+        Row: {
+          background_color: string | null
+          button_link: string | null
+          button_text: string | null
+          content: string
+          created_at: string
+          delay_seconds: number | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          popup_type: Database["public"]["Enums"]["popup_type"]
+          show_close_button: boolean
+          start_date: string | null
+          target_pages: string[] | null
+          text_color: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          button_link?: string | null
+          button_text?: string | null
+          content: string
+          created_at?: string
+          delay_seconds?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          popup_type?: Database["public"]["Enums"]["popup_type"]
+          show_close_button?: boolean
+          start_date?: string | null
+          target_pages?: string[] | null
+          text_color?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          button_link?: string | null
+          button_text?: string | null
+          content?: string
+          created_at?: string
+          delay_seconds?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          popup_type?: Database["public"]["Enums"]["popup_type"]
+          show_close_button?: boolean
+          start_date?: string | null
+          target_pages?: string[] | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -188,6 +272,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      popup_type: "modal" | "slide_in" | "bar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -316,6 +401,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      popup_type: ["modal", "slide_in", "bar"],
     },
   },
 } as const
