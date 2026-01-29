@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { siteConfig, blogPosts } from "@/data/siteData";
+import { siteConfig } from "@/data/siteData";
 import { categories } from "@/data/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,7 +13,9 @@ import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
 import HomeDealOfTheWeek from "@/components/home/HomeDealOfTheWeek";
 import HomeFeaturedProducts from "@/components/home/HomeFeaturedProducts";
 import { useHeroSection, useAboutSection, useCategoryIcons, useSiteConfig } from "@/hooks/useSiteContent";
-
+import { listPublishedBlogPosts } from "@/lib/db/publicBlogPosts";
+import OptimizedImage from "@/components/OptimizedImage";
+import { Skeleton } from "@/components/ui/skeleton";
 // Icon mapping for trust badges
 const iconMap: Record<string, React.ElementType> = {
   "100% Genuine": ShieldCheck,
@@ -348,8 +352,24 @@ function AboutSection() {
   );
 }
 
-// Blog Section
+// Blog Section with live data
 function BlogSection() {
+  const { data: posts, isLoading } = useQuery({
+    queryKey: ["homepage-blog-posts"],
+    queryFn: listPublishedBlogPosts,
+  });
+
+  const displayPosts = (posts ?? []).slice(0, 3);
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
+    try {
+      return format(new Date(dateStr), "MMM d, yyyy");
+    } catch {
+      return "";
+    }
+  };
+
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -363,34 +383,74 @@ function BlogSection() {
           <p className="section-subtitle">News and articles from Dreamcrest</p>
         </motion.div>
         
-        <div className="grid md:grid-cols-3 gap-6">
-          {blogPosts.map((post, i) => (
-            <motion.article
-              key={post.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}
-              className="cyber-card overflow-hidden group"
-            >
-              <div className="aspect-video bg-muted relative overflow-hidden rounded-lg mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                  <span className="text-4xl">📰</span>
-                </div>
+        {isLoading ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="cyber-card overflow-hidden">
+                <Skeleton className="aspect-video rounded-lg mb-4" />
+                <Skeleton className="h-4 w-1/2 mb-2" />
+                <Skeleton className="h-5 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <span className="text-primary">{post.category}</span>
-                <span>•</span>
-                <span>{post.date}</span>
-              </div>
-              <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                {post.title}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
-            </motion.article>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : displayPosts.length === 0 ? (
+          <p className="text-center text-muted-foreground">No blog posts yet.</p>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            {displayPosts.map((post, i) => (
+              <Link key={post.id} to={`/blog/${post.slug}`}>
+                <motion.article
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -5 }}
+                  className="cyber-card overflow-hidden group h-full"
+                >
+                  <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
+                    {post.image_url ? (
+                      <OptimizedImage
+                        src={post.image_url}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <span className="text-4xl">📰</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span className="text-primary">{post.category}</span>
+                    <span>•</span>
+                    <span>{formatDate(post.published_at || post.created_at)}</span>
+                  </div>
+                  <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
+                </motion.article>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {displayPosts.length > 0 && (
+          <motion.div 
+            className="text-center mt-10"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <Link to="/blog">
+              <Button variant="outline" size="lg" className="gap-2">
+                View All Posts <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        )}
       </div>
     </section>
   );
