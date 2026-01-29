@@ -139,11 +139,9 @@ export default function BlogPost() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass p-8 rounded-2xl mb-8"
+            className="glass p-6 md:p-10 rounded-2xl mb-8"
           >
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              <MarkdownRenderer markdown={post.content} />
-            </div>
+            <MarkdownRenderer markdown={post.content} />
           </motion.article>
 
           {/* Back to Blog */}
