@@ -59,6 +59,10 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
+
+            <Link to="/auth" className="hidden sm:block">
+              <Button variant="outline" size="sm">Admin</Button>
+            </Link>
             <Link to="/products">
               <Button variant="default" size="sm" className="hidden sm:flex gap-2 btn-glow">
                 <ShoppingBag className="h-4 w-4" />
