@@ -8,7 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
-import { products, categories, formatPrice, getCategoryFallback } from "@/data/products";
+import { useQuery } from "@tanstack/react-query";
+import { listPublishedProducts } from "@/lib/db/publicProducts";
+import { formatPrice, getCategoryFallback } from "@/data/products";
+import { stripHtml } from "@/lib/text/stripHtml";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -16,6 +19,49 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"discount" | "price-low" | "price-high">("discount");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const productsQuery = useQuery({
+    queryKey: ["public", "products"],
+    queryFn: listPublishedProducts,
+  });
+
+  const products = useMemo(() => {
+    const rows = productsQuery.data ?? [];
+    return rows
+      .map((p) => {
+        const regularPrice = Number(p.regular_price ?? 0);
+        const salePrice = Number(p.sale_price ?? 0);
+        const discount =
+          regularPrice > 0 && salePrice > 0 && salePrice < regularPrice
+            ? Math.round(((regularPrice - salePrice) / regularPrice) * 100)
+            : 0;
+
+        return {
+          id: p.legacy_id ? Number(p.legacy_id) : 0,
+          name: p.name,
+          description: stripHtml(p.description),
+          salePrice,
+          regularPrice,
+          category: p.category,
+          image: p.image_url,
+          externalUrl: p.external_url,
+          discount,
+        };
+      })
+      .filter((p) => p.id > 0);
+  }, [productsQuery.data]);
+
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({
+        name,
+        slug: name.toLowerCase().replace(/\s+/g, "-"),
+        count,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
