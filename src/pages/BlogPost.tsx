@@ -10,6 +10,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedBlogPostBySlug } from "@/lib/db/publicBlogPosts";
+import MarkdownRenderer from "@/components/markdown/MarkdownRenderer";
 
 function readTimeFromText(text: string) {
   const words = (text ?? "").trim().split(/\s+/).filter(Boolean).length;
@@ -141,9 +142,7 @@ export default function BlogPost() {
             className="glass p-8 rounded-2xl mb-8"
           >
             <div className="prose prose-lg dark:prose-invert max-w-none">
-              <p className="text-lg leading-relaxed mb-4 text-foreground/90 whitespace-pre-wrap">
-                {post.content}
-              </p>
+              <MarkdownRenderer markdown={post.content} />
             </div>
           </motion.article>
 
