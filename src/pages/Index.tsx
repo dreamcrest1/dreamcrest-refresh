@@ -2,14 +2,14 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Users, Package, Calendar, Zap, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import OptimizedImage from "@/components/OptimizedImage";
-import { heroSlides, siteConfig, blogPosts } from "@/data/siteData";
-import { getCategoryFallback } from "@/data/products";
-import { products, categories, featuredProducts, dealOfTheWeek, formatPrice } from "@/data/products";
+import { siteConfig, blogPosts } from "@/data/siteData";
+import { categories } from "@/data/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
+import HomeDealOfTheWeek from "@/components/home/HomeDealOfTheWeek";
+import HomeFeaturedProducts from "@/components/home/HomeFeaturedProducts";
 
 // Hero Section with enhanced animations
 function HeroSection() {
@@ -185,163 +185,6 @@ function CategoriesSection() {
   );
 }
 
-// Deal of the Week with countdown
-function DealOfTheWeek() {
-  return (
-    <section className="py-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5" />
-      <div className="container mx-auto px-4 relative">
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <motion.span 
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-destructive/10 text-destructive text-sm font-medium mb-4"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <Zap className="h-4 w-4" /> Limited Time Offers
-          </motion.span>
-          <h2 className="section-title">Deal of the Week</h2>
-          <p className="section-subtitle">Massive discounts - Don't miss out!</p>
-        </motion.div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {dealOfTheWeek.slice(0, 5).map((product, i) => (
-            <Link key={product.id} to={`/product/${product.id}`} className="block">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="product-card group cursor-pointer h-full"
-              >
-                <div className="relative overflow-hidden rounded-lg mb-3">
-                  <motion.span 
-                    className="discount-badge"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    {product.discount}% OFF
-                  </motion.span>
-                  <OptimizedImage
-                    src={product.image}
-                    alt={product.name}
-                    className="product-image w-full h-32 object-cover"
-                    width={320}
-                    height={128}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = getCategoryFallback(product.category);
-                    }}
-                  />
-                </div>
-                <span className="text-xs text-primary font-medium">{product.category}</span>
-                <h3 className="font-medium mt-1 mb-2 text-sm line-clamp-2">{product.name}</h3>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base font-bold text-primary">{formatPrice(product.salePrice)}</span>
-                  <span className="text-xs text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
-                </div>
-                <Button 
-                  className="w-full btn-glow" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(product.externalUrl, '_blank');
-                  }}
-                >
-                  Buy Now
-                </Button>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Featured Products with improved cards
-function FeaturedProducts() {
-  return (
-    <section className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="section-title">Featured Products</h2>
-            <p className="text-muted-foreground">Top picks for you</p>
-          </motion.div>
-          <Link to="/products">
-            <Button variant="outline" className="gap-2">
-              View All <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.slice(0, 8).map((product, i) => (
-            <Link key={product.id} to={`/product/${product.id}`} className="block">
-              <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: i * 0.05, type: "spring" }}
-                viewport={{ once: true }}
-                whileHover={{ y: -8 }}
-                className="product-card group cursor-pointer h-full"
-              >
-                <div className="relative overflow-hidden rounded-lg mb-4">
-                  <motion.span 
-                    className="discount-badge"
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    {product.discount}% OFF
-                  </motion.span>
-                  <OptimizedImage
-                    src={product.image}
-                    alt={product.name}
-                    className="product-image w-full h-48 object-cover"
-                    width={480}
-                    height={192}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = getCategoryFallback(product.category);
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <span className="text-xs text-primary font-medium">{product.category}</span>
-                <h3 className="font-semibold mt-1 mb-2 line-clamp-2 group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-1">{product.description}</p>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg font-bold text-primary">{formatPrice(product.salePrice)}</span>
-                  <span className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice)}</span>
-                </div>
-                <Button 
-                  className="w-full btn-glow" 
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(product.externalUrl, '_blank');
-                  }}
-                >
-                  Buy Now
-                </Button>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // About Section with enhanced visuals
 function AboutSection() {
@@ -494,8 +337,8 @@ export default function Index() {
       <main className="relative z-10">
         <HeroSection />
         <CategoriesSection />
-        <DealOfTheWeek />
-        <FeaturedProducts />
+        <HomeDealOfTheWeek />
+        <HomeFeaturedProducts />
         <AboutSection />
         <DeliveryProofsGallery />
         <BlogSection />
