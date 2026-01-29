@@ -12,14 +12,15 @@ export default function Admin() {
   if (!user) return <Navigate to="/auth" replace />;
   if (roleLoading) return null;
 
-  // If the user isn't admin yet, send them to setup instructions.
-  if (!isAdmin) return <Navigate to="/admin/setup" replace />;
-
   return (
     <Routes>
-      <Route path="/" element={<AdminShell />} />
+      {/* Setup page is always reachable for logged-in users */}
       <Route path="setup" element={<AdminSetup />} />
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+
+      {/* Main admin area requires admin role */}
+      <Route path="/" element={isAdmin ? <AdminShell /> : <Navigate to="/admin/setup" replace />} />
+
+      <Route path="*" element={<Navigate to={isAdmin ? "/admin" : "/admin/setup"} replace />} />
     </Routes>
   );
 }
