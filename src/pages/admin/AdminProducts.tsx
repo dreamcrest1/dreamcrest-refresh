@@ -1,23 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -31,54 +18,26 @@ import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
 import type { DbProduct } from "@/lib/db/products";
-import { deleteProductAdmin, listProductsAdmin, upsertProductAdmin } from "@/lib/db/products";
+import { deleteProductAdmin, listProductsAdmin, updateProductAdmin, upsertProductAdmin } from "@/lib/db/products";
 import { parseWooProductsCsv } from "@/lib/import/productsFromWooCsv";
 import { supabase } from "@/integrations/supabase/client";
+
+import { ProductFullEditor } from "@/pages/admin/products/ProductFullEditor";
+import { ProductQuickEditDrawer, type QuickEditValues } from "@/pages/admin/products/ProductQuickEditDrawer";
+import type { ProductFormValues } from "@/pages/admin/products/productForm";
 
 // Exported by Vite as a raw string at build time.
 // eslint-disable-next-line import/no-unresolved
 import productsImportCsvRaw from "@/data/products-import.csv?raw";
 
-const productSchema = z.object({
-  id: z.string().optional(),
-  legacy_id: z.coerce.number().int().positive("Legacy ID must be a positive number"),
-  name: z.string().trim().min(2).max(200),
-  description: z.string().trim().min(10).max(500),
-  long_description: z.string().trim().max(5000).optional().or(z.literal("")),
-  category: z.string().trim().min(2).max(100),
-  sale_price: z.coerce.number().nonnegative(),
-  regular_price: z.coerce.number().nonnegative(),
-  image_url: z.string().trim().url("Image URL must be a valid URL"),
-  external_url: z.string().trim().url("Buy link must be a valid URL"),
-  featured: z.boolean().default(false),
-  published: z.boolean().default(true),
-  sort_order: z.coerce.number().int().nonnegative().default(0),
-});
-
-type ProductFormValues = z.infer<typeof productSchema>;
-
-function toFormDefaults(p?: DbProduct): ProductFormValues {
-  return {
-    id: p?.id,
-    legacy_id: p?.legacy_id ?? 0,
-    name: p?.name ?? "",
-    description: p?.description ?? "",
-    long_description: p?.long_description ?? "",
-    category: p?.category ?? "Software",
-    sale_price: Number(p?.sale_price ?? 0),
-    regular_price: Number(p?.regular_price ?? 0),
-    image_url: p?.image_url ?? "",
-    external_url: p?.external_url ?? "",
-    featured: p?.featured ?? false,
-    published: p?.published ?? true,
-    sort_order: p?.sort_order ?? 0,
-  };
-}
-
 export default function AdminProducts() {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<DbProduct | null>(null);
+  const [query, setQuery] = useState("");
+  const [fullEditor, setFullEditor] = useState<{ mode: "create" } | { mode: "edit"; id: string } | null>(null);
+
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [quickEditProduct, setQuickEditProduct] = useState<DbProduct | null>(null);
+
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [draftOrder, setDraftOrder] = useState<DbProduct[]>([]);
@@ -90,6 +49,16 @@ export default function AdminProducts() {
   });
 
   const sorted = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const isFiltering = normalizedQuery.length > 0;
+  const filtered = useMemo(() => {
+    if (!isFiltering) return draftOrder;
+    return draftOrder.filter((p) => {
+      const haystack = `${p.name} ${p.category} ${p.legacy_id ?? ""}`.toLowerCase();
+      return haystack.includes(normalizedQuery);
+    });
+  }, [draftOrder, isFiltering, normalizedQuery]);
 
   useEffect(() => {
     setDraftOrder(sorted);
@@ -113,11 +82,6 @@ export default function AdminProducts() {
   const selected = useMemo(() => Array.from(selectedIds), [selectedIds]);
   const allSelected = draftOrder.length > 0 && selectedIds.size === draftOrder.length;
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: toFormDefaults(undefined),
-  });
-
   const upsertMutation = useMutation({
     mutationFn: async (values: ProductFormValues) =>
       upsertProductAdmin({
@@ -137,8 +101,21 @@ export default function AdminProducts() {
       }),
     onSuccess: async () => {
       toast({ title: "Saved", description: "Product updated." });
-      setOpen(false);
-      setEditing(null);
+      setFullEditor(null);
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Save failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const quickEditMutation = useMutation({
+    mutationFn: async (input: { id: string; patch: Parameters<typeof updateProductAdmin>[1] }) =>
+      updateProductAdmin(input.id, input.patch),
+    onSuccess: async () => {
+      toast({ title: "Saved", description: "Changes applied." });
+      setQuickEditOpen(false);
+      setQuickEditProduct(null);
       await qc.invalidateQueries({ queryKey: ["admin", "products"] });
     },
     onError: (err: any) => {
@@ -157,17 +134,30 @@ export default function AdminProducts() {
     },
   });
 
-  const startCreate = () => {
-    setEditing(null);
-    form.reset(toFormDefaults(undefined));
-    setOpen(true);
+  const startCreate = () => setFullEditor({ mode: "create" });
+  const startEdit = (p: DbProduct) => setFullEditor({ mode: "edit", id: p.id });
+
+  const startQuickEdit = (p: DbProduct) => {
+    setQuickEditProduct(p);
+    setQuickEditOpen(true);
   };
 
-  const startEdit = (p: DbProduct) => {
-    setEditing(p);
-    form.reset(toFormDefaults(p));
-    setOpen(true);
-  };
+  const activeEditorProduct = useMemo(() => {
+    if (!fullEditor) return null;
+    if (fullEditor.mode === "create") return null;
+    return sorted.find((p) => p.id === fullEditor.id) ?? null;
+  }, [fullEditor, sorted]);
+
+  if (fullEditor) {
+    return (
+      <ProductFullEditor
+        product={activeEditorProduct}
+        onBack={() => setFullEditor(null)}
+        isSaving={upsertMutation.isPending}
+        onSubmit={(values) => upsertMutation.mutate(values)}
+      />
+    );
+  }
 
   const importFromCsv = async () => {
     setImporting(true);
@@ -284,7 +274,7 @@ export default function AdminProducts() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-muted-foreground">
           Manage products shown on your public Products pages.
@@ -353,8 +343,20 @@ export default function AdminProducts() {
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground">
-        Tip: drag the grip handle to reorder rows, then click <span className="font-medium">Save order</span>.
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-xl flex-1">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search products (name, category, ID)…"
+            aria-label="Search products"
+          />
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {isFiltering
+            ? "Reordering is disabled while searching. Clear search to drag & reorder."
+            : "Tip: drag the grip handle to reorder rows, then click Save order."}
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card/50 overflow-hidden">
@@ -373,14 +375,16 @@ export default function AdminProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {draftOrder.map((p) => (
+            {filtered.map((p) => (
               <TableRow
                 key={p.id}
                 onDragOver={(e) => {
+                  if (isFiltering) return;
                   if (!dragId) return;
                   e.preventDefault();
                 }}
                 onDrop={() => {
+                  if (isFiltering) return;
                   if (!dragId) return;
                   moveByDrag(dragId, p.id);
                   setDragId(null);
@@ -396,10 +400,13 @@ export default function AdminProducts() {
                 <TableCell>
                   <button
                     type="button"
-                    draggable
-                    onDragStart={() => setDragId(p.id)}
+                    draggable={!isFiltering}
+                    onDragStart={() => !isFiltering && setDragId(p.id)}
                     onDragEnd={() => setDragId(null)}
-                    className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground"
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground",
+                      isFiltering && "opacity-40 cursor-not-allowed"
+                    )}
                     aria-label="Drag to reorder"
                   >
                     <GripVertical className="h-4 w-4" />
@@ -407,9 +414,22 @@ export default function AdminProducts() {
                 </TableCell>
                 <TableCell className="font-mono text-xs">{p.legacy_id ?? "—"}</TableCell>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="line-clamp-1">{p.name}</span>
-                    {p.featured && <Badge variant="secondary">Featured</Badge>}
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      className="text-left hover:underline"
+                      onClick={() => startEdit(p)}
+                      title="Open full editor"
+                    >
+                      <span className="line-clamp-1">{p.name}</span>
+                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {p.featured && <Badge variant="secondary">Featured</Badge>}
+                      {!p.published && <Badge variant="secondary">Hidden</Badge>}
+                      <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => startQuickEdit(p)}>
+                        Quick Edit
+                      </Button>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{p.category}</TableCell>
@@ -420,7 +440,7 @@ export default function AdminProducts() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => startEdit(p)} aria-label="Edit">
+                    <Button variant="outline" size="icon" onClick={() => startEdit(p)} aria-label="Open full editor">
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
@@ -450,118 +470,30 @@ export default function AdminProducts() {
         </Table>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <span className="hidden" />
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Edit product" : "Add product"}</DialogTitle>
-            <DialogDescription>
-              Legacy ID keeps your existing /product/1234 links working.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form
-            onSubmit={form.handleSubmit((values) => upsertMutation.mutate(values))}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            <div className="space-y-2">
-              <Label>Legacy ID</Label>
-              <Input inputMode="numeric" {...form.register("legacy_id")} />
-              {form.formState.errors.legacy_id && (
-                <p className="text-sm text-destructive">{form.formState.errors.legacy_id.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Input {...form.register("category")} />
-              {form.formState.errors.category && (
-                <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Name</Label>
-              <Input {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Short description</Label>
-              <Input {...form.register("description")} />
-              {form.formState.errors.description && (
-                <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Long description (optional)</Label>
-              <Input {...form.register("long_description")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Sale price</Label>
-              <Input inputMode="decimal" {...form.register("sale_price")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Regular price</Label>
-              <Input inputMode="decimal" {...form.register("regular_price")} />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Image URL</Label>
-              <Input {...form.register("image_url")} />
-              {form.formState.errors.image_url && (
-                <p className="text-sm text-destructive">{form.formState.errors.image_url.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Buy link (External URL)</Label>
-              <Input {...form.register("external_url")} />
-              {form.formState.errors.external_url && (
-                <p className="text-sm text-destructive">{form.formState.errors.external_url.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Sort order</Label>
-              <Input inputMode="numeric" {...form.register("sort_order")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Flags</Label>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={form.watch("published") ? "default" : "outline"}
-                  onClick={() => form.setValue("published", !form.getValues("published"))}
-                >
-                  {form.watch("published") ? "Published" : "Hidden"}
-                </Button>
-                <Button
-                  type="button"
-                  variant={form.watch("featured") ? "default" : "outline"}
-                  onClick={() => form.setValue("featured", !form.getValues("featured"))}
-                >
-                  {form.watch("featured") ? "Featured" : "Not featured"}
-                </Button>
-              </div>
-            </div>
-
-            <DialogFooter className="md:col-span-2">
-              <Button type="submit" disabled={upsertMutation.isPending}>
-                {upsertMutation.isPending ? "Saving…" : "Save"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ProductQuickEditDrawer
+        open={quickEditOpen}
+        onOpenChange={(o) => {
+          setQuickEditOpen(o);
+          if (!o) setQuickEditProduct(null);
+        }}
+        product={quickEditProduct}
+        isSaving={quickEditMutation.isPending}
+        onSubmit={(values: QuickEditValues) => {
+          if (!quickEditProduct) return;
+          quickEditMutation.mutate({
+            id: quickEditProduct.id,
+            patch: {
+              name: values.name,
+              category: values.category,
+              description: values.description,
+              sale_price: values.sale_price,
+              regular_price: values.regular_price,
+              published: values.published,
+              featured: values.featured,
+            },
+          });
+        }}
+      />
     </div>
   );
 }

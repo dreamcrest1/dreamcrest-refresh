@@ -72,3 +72,13 @@ export async function deleteProductAdmin(id: string) {
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function updateProductAdmin(
+  id: string,
+  patch: Partial<Pick<DbProduct, "name" | "category" | "description" | "sale_price" | "regular_price" | "published" | "featured">>
+) {
+  const { data, error } = await supabase.from("products").update(patch).eq("id", id).select("*").maybeSingle();
+  if (error) throw error;
+  return data as DbProduct | null;
+}
+
