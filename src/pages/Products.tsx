@@ -242,14 +242,14 @@ export default function Products() {
                   <div
                     className={
                       viewMode === "grid" || window.innerWidth < 768
-                        ? "relative aspect-square overflow-hidden"
-                        : "relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden"
+                        ? "relative aspect-square overflow-hidden bg-muted/50"
+                        : "relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted/50"
                     }
                   >
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = getCategoryFallback(product.category);
