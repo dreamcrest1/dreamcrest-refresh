@@ -141,11 +141,11 @@ export default function ProductDetail() {
               animate={{ opacity: 1, x: 0 }}
               className="relative"
             >
-              <div className="aspect-square rounded-2xl overflow-hidden bg-card border border-border">
+              <div className="aspect-square rounded-2xl overflow-hidden bg-muted/50 border border-border">
                 <OptimizedImage
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-4"
                   width={900}
                   height={900}
                   loading="eager"
@@ -276,11 +276,11 @@ export default function ProductDetail() {
                     className="group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all"
                   >
                     <Link to={`/product/${relProduct.id}`} className="block">
-                      <div className="aspect-square overflow-hidden">
+                      <div className="aspect-square overflow-hidden bg-muted/50">
                         <OptimizedImage
                           src={relProduct.image}
                           alt={relProduct.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
                           width={600}
                           height={600}
                           loading="lazy"
