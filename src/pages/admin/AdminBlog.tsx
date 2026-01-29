@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MarkdownRenderer from "@/components/markdown/MarkdownRenderer";
 
 import type { BlogPostRow } from "@/lib/db/blogPosts";
 import { deleteBlogPostAdmin, listBlogPostsAdmin, upsertBlogPostAdmin } from "@/lib/db/blogPosts";
@@ -236,10 +238,27 @@ export default function AdminBlog() {
 
             <div className="space-y-2">
               <Label>Content</Label>
-              <textarea
-                className="w-full min-h-[240px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                {...form.register("content")}
-              />
+              <Tabs defaultValue="write" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="write">Write</TabsTrigger>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="write" className="mt-2">
+                  <textarea
+                    className="w-full min-h-[240px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    {...form.register("content")}
+                  />
+                </TabsContent>
+
+                <TabsContent value="preview" className="mt-2">
+                  <div className="rounded-md border bg-card/50 p-4">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <MarkdownRenderer markdown={form.watch("content") || ""} />
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
               {form.formState.errors.content && (
                 <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
               )}
