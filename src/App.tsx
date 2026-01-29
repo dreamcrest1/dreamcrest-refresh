@@ -8,6 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Preloader from "@/components/Preloader";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 const Index = lazy(() => import("./pages/Index"));
 const Products = lazy(() => import("./pages/Products"));
@@ -22,6 +23,9 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BannerTest = lazy(() => import("./pages/BannerTest"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+const Auth = lazy(() => import("./pages/Auth"));
+const Admin = lazy(() => import("./pages/admin/Admin"));
+
 const queryClient = new QueryClient();
 
 const RouteFallback = () => (
@@ -34,31 +38,35 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="dreamcrest-theme">
       <TooltipProvider>
-        <Preloader />
-        
-        <FloatingWhatsApp />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/alltools" element={<AllTools />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/refunds" element={<Refunds />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:id" element={<BlogPost />} />
-              <Route path="/banner-test" element={<BannerTest />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+        <AuthProvider>
+          <Preloader />
+
+          <FloatingWhatsApp />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/alltools" element={<AllTools />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/refunds" element={<Refunds />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:id" element={<BlogPost />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin/*" element={<Admin />} />
+                <Route path="/banner-test" element={<BannerTest />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
