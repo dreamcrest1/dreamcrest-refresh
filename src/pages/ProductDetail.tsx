@@ -37,6 +37,33 @@ export default function ProductDetail() {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [id]);
 
+  if (productQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CyberBackground />
+        <CursorTrail />
+        <Header />
+        <main className="relative z-10 pt-24 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="animate-pulse space-y-6">
+              <div className="h-6 w-48 rounded bg-muted" />
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div className="aspect-square rounded-2xl bg-muted" />
+                <div className="space-y-4">
+                  <div className="h-5 w-28 rounded bg-muted" />
+                  <div className="h-10 w-3/4 rounded bg-muted" />
+                  <div className="h-24 w-full rounded bg-muted" />
+                  <div className="h-12 w-2/3 rounded bg-muted" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!productQuery.isLoading && !product) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -69,6 +96,7 @@ export default function ProductDetail() {
         category: p.category,
         image: p.image_url,
         discount,
+          externalUrl: p.external_url,
       };
     })
     .filter((p) => p.id > 0);
@@ -243,39 +271,61 @@ export default function ProductDetail() {
               <h2 className="text-2xl font-bold mb-6">Related Products</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map((relProduct) => (
-                  <Link
+                  <div
                     key={relProduct.id}
-                    to={`/product/${relProduct.id}`}
                     className="group bg-card/80 backdrop-blur border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all"
                   >
-                    <div className="aspect-square overflow-hidden">
-                      <OptimizedImage
-                        src={relProduct.image}
-                        alt={relProduct.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        width={600}
-                        height={600}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = getCategoryFallback(relProduct.category);
-                        }}
-                      />
-                    </div>
+                    <Link to={`/product/${relProduct.id}`} className="block">
+                      <div className="aspect-square overflow-hidden">
+                        <OptimizedImage
+                          src={relProduct.image}
+                          alt={relProduct.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          width={600}
+                          height={600}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = getCategoryFallback(relProduct.category);
+                          }}
+                        />
+                      </div>
+                    </Link>
+
                     <div className="p-4">
-                      <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                        {relProduct.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-primary font-bold">
-                          {formatPrice(relProduct.salePrice)}
-                        </span>
-                        <Badge variant="secondary" className="text-xs">
-                          {relProduct.discount}% OFF
-                        </Badge>
+                      <Link to={`/product/${relProduct.id}`} className="block">
+                        <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                          {relProduct.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-primary font-bold">
+                            {formatPrice(relProduct.salePrice)}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {relProduct.discount}% OFF
+                          </Badge>
+                        </div>
+                      </Link>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        <a href={relProduct.externalUrl} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" className="w-full gap-2">
+                            Buy Now <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </a>
+                        <a
+                          href={`https://wa.me/${siteConfig.contact.phone.replace(/\D/g, "")}?text=Hi, I'm interested in ${relProduct.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="w-full gap-2">
+                            <MessageCircle className="h-4 w-4" />
+                            Inquire on WhatsApp
+                          </Button>
+                        </a>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </motion.section>
