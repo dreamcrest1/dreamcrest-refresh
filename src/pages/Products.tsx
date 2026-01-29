@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Grid, List, ExternalLink, Sparkles } from "lucide-react";
+import { Search, Grid, List, ExternalLink, Sparkles, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listPublishedProducts } from "@/lib/db/publicProducts";
 import { formatPrice, getCategoryFallback } from "@/data/products";
 import { stripHtml } from "@/lib/text/stripHtml";
+import { buildWhatsAppInquireUrl } from "@/lib/whatsapp";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ export default function Products() {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [products, searchQuery, selectedCategory, sortBy]);
 
   const handleCardClick = (productId: number, e: React.MouseEvent) => {
     // Don't navigate if clicking on the Buy Now button
@@ -279,17 +280,36 @@ export default function Products() {
                     </div>
 
                     <div className="mt-2 md:mt-3">
-                      <a
-                        href={product.externalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="block"
-                      >
-                        <Button size="sm" className="w-full gap-1 text-xs md:text-sm h-8 md:h-9">
-                          Buy Now <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      </a>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <a
+                          href={product.externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="block"
+                        >
+                          <Button size="sm" className="w-full gap-1 text-xs md:text-sm h-8 md:h-9">
+                            Buy Now <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </a>
+
+                        <a
+                          href={buildWhatsAppInquireUrl(`Hi, I'm interested in ${product.name}`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="block"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full gap-1 text-xs md:text-sm h-8 md:h-9"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            Inquire
+                          </Button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

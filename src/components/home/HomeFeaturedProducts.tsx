@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import OptimizedImage from "@/components/OptimizedImage";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { listPublishedProducts } from "@/lib/db/publicProducts";
 import { formatPriceINR, getCategoryFallbackImage } from "@/lib/products/format";
 import { stripHtml } from "@/lib/text/stripHtml";
+import { buildWhatsAppInquireUrl } from "@/lib/whatsapp";
 
 export default function HomeFeaturedProducts() {
   const { data, isLoading, isError } = useQuery({
@@ -87,16 +88,34 @@ export default function HomeFeaturedProducts() {
                     {formatPriceINR(Number(product.regular_price))}
                   </span>
                 </div>
-                <Button
-                  className="w-full btn-glow"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(product.external_url, "_blank");
-                  }}
-                >
-                  Buy Now
-                </Button>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    className="w-full btn-glow"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(product.external_url, "_blank");
+                    }}
+                  >
+                    Buy Now
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(
+                        buildWhatsAppInquireUrl(`Hi, I'm interested in ${product.name}`),
+                        "_blank"
+                      );
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Inquire on WhatsApp
+                  </Button>
+                </div>
               </motion.div>
             </Link>
           ))}
