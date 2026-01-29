@@ -134,6 +134,61 @@ export default function AdminProducts() {
     },
   });
 
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async (input: { ids: string[]; patch: Partial<Pick<DbProduct, "published" | "featured">> }) => {
+      if (!input.ids.length) return;
+      const { error } = await supabase.from("products").update(input.patch).in("id", input.ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast({ title: "Updated", description: "Bulk update applied." });
+      setSelectedIds(new Set());
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Update failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!ids.length) return;
+      const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast({ title: "Deleted", description: "Selected products deleted." });
+      setSelectedIds(new Set());
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Delete failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const saveOrderMutation = useMutation({
+    mutationFn: async (rows: DbProduct[]) => {
+      const updates = rows.map((p, idx) => ({ id: p.id, sort_order: idx }));
+      const BATCH = 25;
+      for (let i = 0; i < updates.length; i += BATCH) {
+        const batch = updates.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map(async (u) => {
+            const { error } = await supabase.from("products").update({ sort_order: u.sort_order }).eq("id", u.id);
+            if (error) throw error;
+          })
+        );
+      }
+    },
+    onSuccess: async () => {
+      toast({ title: "Saved", description: "Order updated." });
+      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Save failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
+
   const startCreate = () => setFullEditor({ mode: "create" });
   const startEdit = (p: DbProduct) => setFullEditor({ mode: "edit", id: p.id });
 
@@ -148,6 +203,7 @@ export default function AdminProducts() {
     return sorted.find((p) => p.id === fullEditor.id) ?? null;
   }, [fullEditor, sorted]);
 
+  // Early return AFTER all hooks
   if (fullEditor) {
     return (
       <ProductFullEditor
@@ -188,61 +244,6 @@ export default function AdminProducts() {
     }
   };
 
-  const bulkUpdateMutation = useMutation({
-    mutationFn: async (input: { ids: string[]; patch: Partial<Pick<DbProduct, "published" | "featured">> }) => {
-      if (!input.ids.length) return;
-      const { error } = await supabase.from("products").update(input.patch).in("id", input.ids);
-      if (error) throw error;
-    },
-    onSuccess: async () => {
-      toast({ title: "Updated", description: "Bulk update applied." });
-      setSelectedIds(new Set());
-      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Update failed", description: err?.message ?? "Please try again.", variant: "destructive" });
-    },
-  });
-
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      if (!ids.length) return;
-      const { error } = await supabase.from("products").delete().in("id", ids);
-      if (error) throw error;
-    },
-    onSuccess: async () => {
-      toast({ title: "Deleted", description: "Selected products deleted." });
-      setSelectedIds(new Set());
-      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Delete failed", description: err?.message ?? "Please try again.", variant: "destructive" });
-    },
-  });
-
-  const saveOrderMutation = useMutation({
-    mutationFn: async (rows: DbProduct[]) => {
-      // Update only sort_order. Use UPDATE per row to avoid accidental null overwrites.
-      const updates = rows.map((p, idx) => ({ id: p.id, sort_order: idx }));
-      const BATCH = 25;
-      for (let i = 0; i < updates.length; i += BATCH) {
-        const batch = updates.slice(i, i + BATCH);
-        await Promise.all(
-          batch.map(async (u) => {
-            const { error } = await supabase.from("products").update({ sort_order: u.sort_order }).eq("id", u.id);
-            if (error) throw error;
-          })
-        );
-      }
-    },
-    onSuccess: async () => {
-      toast({ title: "Saved", description: "Order updated." });
-      await qc.invalidateQueries({ queryKey: ["admin", "products"] });
-    },
-    onError: (err: any) => {
-      toast({ title: "Save failed", description: err?.message ?? "Please try again.", variant: "destructive" });
-    },
-  });
 
   const toggleAll = (checked: boolean) => {
     setSelectedIds(() => {
