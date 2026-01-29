@@ -10,12 +10,13 @@ import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminSiteContent from "@/pages/admin/AdminSiteContent";
 import AdminBlog from "@/pages/admin/AdminBlog";
 import AdminMediaLinks from "@/pages/admin/AdminMediaLinks";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
 
-type Tab = "products" | "site" | "blog" | "media";
+type Tab = "overview" | "products" | "site" | "blog" | "media";
 
 export default function AdminShell() {
   const { signOut } = useAuth();
-  const [tab, setTab] = useState<Tab>("products");
+  const [tab, setTab] = useState<Tab>("overview");
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,6 +33,9 @@ export default function AdminShell() {
                   <CardTitle>Admin</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <Button variant={tab === "overview" ? "default" : "outline"} className="w-full" onClick={() => setTab("overview")}>
+                    Overview
+                  </Button>
                   <Button variant={tab === "products" ? "default" : "outline"} className="w-full" onClick={() => setTab("products")}>
                     Products
                   </Button>
@@ -61,6 +65,7 @@ export default function AdminShell() {
               <Card className="bg-card/80 backdrop-blur">
                 <CardHeader>
                   <CardTitle>
+                    {tab === "overview" && "Overview"}
                     {tab === "products" && "Products"}
                     {tab === "site" && "Site Content"}
                     {tab === "blog" && "Blog"}
@@ -68,6 +73,7 @@ export default function AdminShell() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {tab === "overview" && <AdminDashboard />}
                   {tab === "products" && <AdminProducts />}
                   {tab === "site" && <AdminSiteContent />}
                   {tab === "blog" && <AdminBlog />}

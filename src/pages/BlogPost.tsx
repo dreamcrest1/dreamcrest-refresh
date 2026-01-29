@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Tag, ArrowLeft, ExternalLink } from "lucide-react";
+import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -8,64 +8,49 @@ import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { Button } from "@/components/ui/button";
 import OptimizedImage from "@/components/OptimizedImage";
 
-import blogNetflixImg from "@/assets/blog-netflix-household.webp";
-import blogDreamtoolsImg from "@/assets/blog-dreamtools.webp";
+import { useQuery } from "@tanstack/react-query";
+import { getPublishedBlogPostBySlug } from "@/lib/db/publicBlogPosts";
 
-const blogPosts = [
-  {
-    id: "netflix-no-household",
-    title: "Now Stream Netflix Without The Issue of Household/Travel Errors",
-    content: [
-      "At Dreamcrest, innovation is at the core of everything we do. Since 2021, we've been proud to lead the way in OTT and cloud service solutions, delivering seamless and user-friendly experiences for our clients.",
-      "One of our latest advancements is a proprietary technology designed to simplify the process of retrieving Netflix household and travel codes. Often, users encounter access issues due to household or travel code errors. To resolve this quickly and without hassle, users can visit code.dreamcrest.net, enter their registered email address, and instantly retrieve the necessary code—no complicated steps, no waiting.",
-      "This exclusive solution is powered by our in-house technology, available only through Dreamcrest. It represents our commitment to providing practical, secure, and efficient tools that enhance user experience and reduce downtime.",
-      "Our dedication to quality and innovation has established us as one of the most trusted names in the OTT and cloud services space. With Dreamcrest, you're not just accessing a service—you're partnering with a team that values reliability, excellence, and forward-thinking solutions.",
-    ],
-    date: "January 10, 2025",
-    readTime: "1 Min Read",
-    category: "OTT",
-    image: blogNetflixImg,
-    link: "https://code.dreamcrest.net",
-    linkText: "Get Your Netflix Code",
-  },
-  {
-    id: "movieboxpro-ultimate-ott-killer",
-    title: "Movie Box Pro – Ultimate OTT Killer",
-    content: [
-      "MovieBox Pro – The Ultimate OTT App Alternative",
-      "Discover MovieBox Pro, the all-in-one streaming solution designed to bring your favorite content from platforms like Netflix, Prime Video, Hulu, Starz, HBO, Showtime, and many more—all in one place.",
-      "Whether you're using a laptop, Smart TV, Firestick, Android TV, or mobile device, MovieBox Pro offers a seamless, cross-platform experience that works worldwide.",
-      "Available exclusively at movieboxpro.info, this is a private, invite-only service—making it one of the most exclusive streaming platforms available today. Access is limited and highly sought after, so don't miss your chance to get in. Join now while access is still open!",
-    ],
-    date: "December 8, 2022",
-    readTime: "1 Min Read",
-    category: "OTT",
-    image: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1200&h=600&fit=crop",
-    link: "https://movieboxpro.info",
-    linkText: "Visit MovieBox Pro",
-  },
-  {
-    id: "dreamtools-in-new-addition",
-    title: "Dreamtools.in – A New Addition To Dreamcrest Group Buy Services",
-    content: [
-      "Introducing DreamTools – Your Gateway to Effortless Premium Access",
-      "We are excited to announce the launch of our newly developed panel, designed to provide seamless access to a wide range of premium services. With DreamTools, users can simply log in to their account and access all subscribed tools and services without any hassle.",
-      "Built using modern, powerful technologies like React.js, PHP, and JavaScript, our platform ensures a smooth and responsive user experience. DreamTools is engineered to support multiple users and simultaneous access to various services—making it a scalable and reliable solution for both individuals and teams.",
-      "One of the key features of this platform is its transparency. Users can easily track their usage history, monitor service activity, and view the expiration dates of their subscriptions in real time. This makes managing your tools not only easier, but also more efficient and organized.",
-      "At Dreamcrest, we're committed to constant innovation. With DreamTools, we aim to turn ambitious ideas into reality by continuously expanding the range of premium services available on the platform.",
-    ],
-    date: "January 5, 2022",
-    readTime: "2 Min Read",
-    category: "Cloud",
-    image: blogDreamtoolsImg,
-    link: "https://dreamtools.in",
-    linkText: "Visit DreamTools",
-  },
-];
+function readTimeFromText(text: string) {
+  const words = (text ?? "").trim().split(/\s+/).filter(Boolean).length;
+  const mins = Math.max(1, Math.round(words / 200));
+  return `${mins} Min Read`;
+}
 
 export default function BlogPost() {
   const { id } = useParams();
-  const post = blogPosts.find((p) => p.id === id);
+  const slug = id ?? "";
+
+  const postQuery = useQuery({
+    queryKey: ["public", "blog_post", slug],
+    enabled: !!slug,
+    queryFn: () => getPublishedBlogPostBySlug(slug),
+    staleTime: 60_000,
+  });
+
+  const post = postQuery.data;
+
+  if (postQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CyberBackground />
+        <CursorTrail />
+        <Header />
+        <FloatingWhatsApp />
+        <main className="relative z-10 pt-24 pb-16">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="animate-pulse space-y-6">
+              <div className="h-6 w-40 bg-muted rounded" />
+              <div className="h-64 md:h-96 w-full bg-muted rounded-2xl" />
+              <div className="h-10 w-3/4 bg-muted rounded" />
+              <div className="h-32 w-full bg-muted rounded-2xl" />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -111,7 +96,7 @@ export default function BlogPost() {
             className="rounded-2xl overflow-hidden mb-8"
           >
             <OptimizedImage
-              src={post.image}
+              src={post.image_url || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=600&fit=crop"}
               alt={post.title}
               className="w-full h-64 md:h-96 object-cover"
               width={1200}
@@ -135,11 +120,11 @@ export default function BlogPost() {
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {post.date}
+                {new Date(post.published_at || post.created_at).toLocaleDateString()}
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {post.readTime}
+                {readTimeFromText(post.content)}
               </span>
             </div>
 
@@ -156,28 +141,10 @@ export default function BlogPost() {
             className="glass p-8 rounded-2xl mb-8"
           >
             <div className="prose prose-lg dark:prose-invert max-w-none">
-              {post.content.map((paragraph, index) => (
-                <p key={index} className="text-lg leading-relaxed mb-4 text-foreground/90">
-                  {paragraph}
-                </p>
-              ))}
+              <p className="text-lg leading-relaxed mb-4 text-foreground/90 whitespace-pre-wrap">
+                {post.content}
+              </p>
             </div>
-
-            {/* CTA */}
-            {post.link && (
-              <div className="mt-8 pt-8 border-t border-border">
-                <a
-                  href={post.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button size="lg" className="gap-2">
-                    {post.linkText}
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </a>
-              </div>
-            )}
           </motion.article>
 
           {/* Back to Blog */}

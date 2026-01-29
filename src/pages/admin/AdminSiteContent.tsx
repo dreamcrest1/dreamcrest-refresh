@@ -25,6 +25,41 @@ import type { SiteContentRow } from "@/lib/db/siteContent";
 import { deleteSiteContentAdmin, listSiteContentAdmin, upsertSiteContentAdmin } from "@/lib/db/siteContent";
 import type { Json } from "@/integrations/supabase/types";
 
+const templates: Array<{ id: string; label: string; key: string; value: Json }> = [
+  {
+    id: "contact",
+    label: "Contact info",
+    key: "site.contact",
+    value: {
+      phone: "+91 63579 98730",
+      email: "dreamcrestsolutions@gmail.com",
+      whatsapp_message_template: "Hi, I'm interested in {{product_name}}",
+    },
+  },
+  {
+    id: "homeHero",
+    label: "Home hero",
+    key: "home.hero",
+    value: {
+      headline: "Premium Tools & Subscriptions",
+      subheadline: "Instant delivery • Best prices • 24/7 support",
+      primaryCta: { label: "Browse products", href: "/products" },
+      secondaryCta: { label: "Chat on WhatsApp", href: "whatsapp" },
+    },
+  },
+  {
+    id: "footer",
+    label: "Footer links",
+    key: "site.footer",
+    value: {
+      columns: [
+        { title: "Company", links: [{ label: "About", href: "/about" }, { label: "Contact", href: "/contact" }] },
+        { title: "Help", links: [{ label: "FAQ", href: "/faq" }, { label: "Refunds", href: "/refunds" }] },
+      ],
+    },
+  },
+];
+
 const schema = z.object({
   key: z.string().trim().min(1).max(200),
   valueJson: z.string().trim().min(2, "Value must be valid JSON"),
@@ -100,6 +135,14 @@ export default function AdminSiteContent() {
     setOpen(true);
   };
 
+  const applyTemplate = (id: string) => {
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+    // Template is meant for creating new keys; don't override existing keys while editing.
+    if (!editing) form.setValue("key", t.key);
+    form.setValue("valueJson", JSON.stringify(t.value, null, 2));
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -173,6 +216,25 @@ export default function AdminSiteContent() {
             onSubmit={form.handleSubmit((v) => upsert.mutate(v))}
             className="grid grid-cols-1 gap-4"
           >
+            {!editing && (
+              <div className="space-y-2">
+                <Label>Templates</Label>
+                <div className="flex flex-wrap gap-2">
+                  {templates.map((t) => (
+                    <Button
+                      key={t.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applyTemplate(t.id)}
+                    >
+                      {t.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Key</Label>
               <Input disabled={!!editing} {...form.register("key")} placeholder="e.g. home.hero" />
