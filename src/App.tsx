@@ -22,7 +22,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
-const BannerTest = lazy(() => import("./pages/BannerTest"));
+
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -64,7 +64,7 @@ const App = () => (
                 <Route path="/blog/:id" element={<BlogPost />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/admin/*" element={<Admin />} />
-                <Route path="/banner-test" element={<BannerTest />} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
