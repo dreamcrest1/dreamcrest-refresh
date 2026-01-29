@@ -5,11 +5,25 @@ import { Menu, X, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { navLinks } from "@/data/siteData";
+import { navLinks as defaultNavLinks } from "@/data/siteData";
+import { useNavLinks, useHeaderSettings } from "@/hooks/useSiteContent";
 import logo from "@/assets/dreamcrest-logo.png";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Live content hooks
+  const { data: navLinks } = useNavLinks();
+  const { data: headerSettings } = useHeaderSettings();
+
+  const links = navLinks ?? defaultNavLinks;
+  const settings = headerSettings ?? {
+    announcementBar: "INSTANT DELIVERY OF ALL DIGITAL PRODUCTS",
+    logoUrl: "",
+    showAdminButton: true,
+    showShopButton: true,
+    shopButtonText: "Shop Now",
+  };
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -24,7 +38,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground text-center py-1.5 text-sm font-medium">
-        INSTANT DELIVERY OF ALL DIGITAL PRODUCTS
+        {settings.announcementBar}
       </div>
 
       {/* Main header */}
@@ -33,7 +47,7 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <img
-              src={logo}
+              src={settings.logoUrl || logo}
               alt="Dreamcrest"
               width={160}
               height={40}
@@ -45,7 +59,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
@@ -60,15 +74,19 @@ export function Header() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
-            <Link to="/auth" className="hidden sm:block">
-              <Button variant="outline" size="sm">Admin</Button>
-            </Link>
-            <Link to="/products">
-              <Button variant="default" size="sm" className="hidden sm:flex gap-2 btn-glow">
-                <ShoppingBag className="h-4 w-4" />
-                Shop Now
-              </Button>
-            </Link>
+            {settings.showAdminButton && (
+              <Link to="/auth" className="hidden sm:block">
+                <Button variant="outline" size="sm">Admin</Button>
+              </Link>
+            )}
+            {settings.showShopButton && (
+              <Link to="/products">
+                <Button variant="default" size="sm" className="hidden sm:flex gap-2 btn-glow">
+                  <ShoppingBag className="h-4 w-4" />
+                  {settings.shopButtonText}
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -110,7 +128,7 @@ export function Header() {
                     </Button>
                   </div>
                   <nav className="flex-1 overflow-y-auto p-4 space-y-2 bg-card">
-                    {navLinks.map((link) => (
+                    {links.map((link) => (
                       <Link
                         key={link.name}
                         to={link.href}
@@ -120,9 +138,11 @@ export function Header() {
                         {link.name}
                       </Link>
                     ))}
-                    <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full mt-4">Shop Now</Button>
-                    </Link>
+                    {settings.showShopButton && (
+                      <Link to="/products" onClick={() => setMobileMenuOpen(false)}>
+                        <Button className="w-full mt-4">{settings.shopButtonText}</Button>
+                      </Link>
+                    )}
                   </nav>
                 </motion.div>
               </>

@@ -10,9 +10,52 @@ import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { DeliveryProofsGallery } from "@/components/DeliveryProofsGallery";
 import HomeDealOfTheWeek from "@/components/home/HomeDealOfTheWeek";
 import HomeFeaturedProducts from "@/components/home/HomeFeaturedProducts";
+import { useHeroSection, useAboutSection, useCategoryIcons, useSiteConfig } from "@/hooks/useSiteContent";
 
-// Hero Section with enhanced animations
+// Icon mapping for trust badges
+const iconMap: Record<string, React.ElementType> = {
+  "100% Genuine": ShieldCheck,
+  "Instant Delivery": Zap,
+  "24/7 Support": Clock,
+};
+
+// Icon mapping for stats
+const statIconMap: Record<string, React.ElementType> = {
+  "Happy Customers": Users,
+  "Products": Package,
+  "Trusted": Calendar,
+  "Support": Sparkles,
+};
+
+// Hero Section with live content
 function HeroSection() {
+  const { data: heroData } = useHeroSection();
+  const { data: siteConfigData } = useSiteConfig();
+
+  const hero = heroData ?? {
+    headline: "India's Most",
+    highlightWord: "Trusted",
+    subheadline: "Digital Product Store",
+    primaryCtaText: "Explore Products",
+    primaryCtaLink: "/products",
+    secondaryCtaText: "Contact Us",
+    secondaryCtaLink: "/contact",
+    badgeText: "Up to 80% OFF on All Products",
+    stats: [
+      { value: "15,000+", label: "Happy Customers" },
+      { value: "200+", label: "Products" },
+      { value: "Since 2021", label: "Trusted" },
+      { value: "24/7", label: "Support" },
+    ],
+    trustBadges: [
+      { text: "100% Genuine" },
+      { text: "Instant Delivery" },
+      { text: "24/7 Support" },
+    ],
+  };
+
+  const config = siteConfigData ?? siteConfig;
+
   return (
     <section className="relative min-h-[90vh] flex items-center pt-32 pb-16 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -28,10 +71,10 @@ function HeroSection() {
               transition={{ duration: 2, repeat: Infinity }}
             >
               <Sparkles className="h-4 w-4 animate-pulse" />
-              Up to 80% OFF on All Products
+              {hero.badgeText}
             </motion.span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              India's Most{" "}
+              {hero.headline}{" "}
               <motion.span 
                 className="gradient-text inline-block"
                 animate={{ 
@@ -43,43 +86,42 @@ function HeroSection() {
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                Trusted
+                {hero.highlightWord}
               </motion.span>{" "}
-              Digital Product Store
+              {hero.subheadline}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg">
               Get premium AI tools, OTT subscriptions, software & more at unbeatable prices. 
-              Serving {siteConfig.customers} happy customers since {siteConfig.since}.
+              Serving {config.customers} happy customers since {config.since}.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/products">
+              <Link to={hero.primaryCtaLink}>
                 <Button size="lg" className="btn-glow gap-2 text-lg px-8">
-                  Explore Products <ArrowRight className="h-5 w-5" />
+                  {hero.primaryCtaText} <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="text-lg px-8">Contact Us</Button>
+              <Link to={hero.secondaryCtaLink}>
+                <Button size="lg" variant="outline" className="text-lg px-8">{hero.secondaryCtaText}</Button>
               </Link>
             </div>
             
             {/* Trust badges */}
             <div className="flex flex-wrap gap-4 mt-8">
-              {[
-                { icon: ShieldCheck, text: "100% Genuine" },
-                { icon: Zap, text: "Instant Delivery" },
-                { icon: Clock, text: "24/7 Support" },
-              ].map((badge, i) => (
-                <motion.div
-                  key={badge.text}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.1 }}
-                  className="flex items-center gap-2 text-sm text-muted-foreground"
-                >
-                  <badge.icon className="h-4 w-4 text-primary" />
-                  {badge.text}
-                </motion.div>
-              ))}
+              {(hero.trustBadges ?? []).map((badge: any, i: number) => {
+                const IconComponent = iconMap[badge.text] ?? ShieldCheck;
+                return (
+                  <motion.div
+                    key={badge.text}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 + i * 0.1 }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
+                    <IconComponent className="h-4 w-4 text-primary" />
+                    {badge.text}
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
 
@@ -90,37 +132,35 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-2 gap-4"
           >
-            {[
-              { icon: Users, value: "15,000+", label: "Happy Customers", color: "primary" },
-              { icon: Package, value: "200+", label: "Products", color: "secondary" },
-              { icon: Calendar, value: "Since 2021", label: "Trusted", color: "primary" },
-              { icon: Sparkles, value: "24/7", label: "Support", color: "secondary" },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="cyber-card text-center group"
-              >
+            {(hero.stats ?? []).map((stat: any, i: number) => {
+              const IconComponent = statIconMap[stat.label] ?? Sparkles;
+              return (
                 <motion.div
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, delay: i * 0.5 }}
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="cyber-card text-center group"
                 >
-                  <stat.icon className={`h-8 w-8 mx-auto mb-3 text-${stat.color} group-hover:scale-110 transition-transform`} />
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, delay: i * 0.5 }}
+                  >
+                    <IconComponent className="h-8 w-8 mx-auto mb-3 text-primary group-hover:scale-110 transition-transform" />
+                  </motion.div>
+                  <motion.div 
+                    className="text-2xl md:text-3xl font-bold"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 + i * 0.1 }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </motion.div>
-                <motion.div 
-                  className="text-2xl md:text-3xl font-bold"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
-                >
-                  {stat.value}
-                </motion.div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         </div>
       </div>
@@ -128,9 +168,17 @@ function HeroSection() {
   );
 }
 
-// Categories Section with enhanced animations
+// Categories Section with live icons
 function CategoriesSection() {
-  const iconMap: Record<string, string> = {
+  const { data: categoryIcons } = useCategoryIcons();
+
+  const iconMap: Record<string, string> = {};
+  (categoryIcons ?? []).forEach((item: any) => {
+    iconMap[item.name] = item.icon;
+  });
+
+  // Fallback icons
+  const fallbackIcons: Record<string, string> = {
     "AI Tools": "🤖",
     "Video Editing": "🎬",
     "Indian OTT": "📺",
@@ -172,7 +220,7 @@ function CategoriesSection() {
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                 >
-                  {iconMap[cat.name]}
+                  {iconMap[cat.name] ?? fallbackIcons[cat.name] ?? "📦"}
                 </motion.span>
                 <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">{cat.name}</h3>
                 <p className="text-sm text-muted-foreground">{cat.count} Products</p>
@@ -186,8 +234,35 @@ function CategoriesSection() {
 }
 
 
-// About Section with enhanced visuals
+// About Section with live content
 function AboutSection() {
+  const { data: aboutData } = useAboutSection();
+  const { data: siteConfigData } = useSiteConfig();
+
+  const about = aboutData ?? {
+    subtitle: "About Us",
+    title: "Dreamcrest Solutions",
+    tagline: "Oldest Multiplatform Service Provider",
+    description: "Dreamcrest Group is a leading provider of OTT services and group buy tools at discounted prices. Founded in 2021, Dreamcrest has gained over 15,000+ customers and has expanded its reach internationally.",
+    bulletPoints: [
+      "Most Trusted Service Provider",
+      "Over 200+ Products Available",
+      "Most Responsive Customer Support",
+      "Instant Digital Delivery",
+    ],
+    primaryCtaText: "Contact Us",
+    primaryCtaLink: "/contact",
+    secondaryCtaText: "View Proofs",
+    secondaryCtaLink: "https://www.instagram.com/dreamcrest_solutions",
+    highlightNumber: "15,000+",
+    highlightLabel: "Happy Customers",
+    highlightSubLabel: "& Growing Every Day",
+    floatingBadge1: "⭐ 4.9 Rating",
+    floatingBadge2: "🚀 Since 2021",
+  };
+
+  const config = siteConfigData ?? siteConfig;
+
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
@@ -197,20 +272,14 @@ function AboutSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-primary font-medium uppercase tracking-wider">About Us</span>
-            <h2 className="section-title mt-2">Dreamcrest Solutions</h2>
-            <h3 className="text-xl text-muted-foreground mb-6">Oldest Multiplatform Service Provider</h3>
+            <span className="text-primary font-medium uppercase tracking-wider">{about.subtitle}</span>
+            <h2 className="section-title mt-2">{about.title}</h2>
+            <h3 className="text-xl text-muted-foreground mb-6">{about.tagline}</h3>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              Dreamcrest Group is a leading provider of OTT services and group buy tools at discounted prices. 
-              Founded in 2021, Dreamcrest has gained over 15,000+ customers and has expanded its reach internationally.
+              {about.description}
             </p>
             <ul className="space-y-4 mb-8">
-              {[
-                "Most Trusted Service Provider",
-                "Over 200+ Products Available",
-                "Most Responsive Customer Support",
-                "Instant Digital Delivery",
-              ].map((item, i) => (
+              {(about.bulletPoints ?? []).map((item: string, i: number) => (
                 <motion.li 
                   key={item} 
                   className="flex items-center gap-3"
@@ -225,11 +294,11 @@ function AboutSection() {
               ))}
             </ul>
             <div className="flex gap-4">
-              <Link to="/contact">
-                <Button size="lg">Contact Us</Button>
+              <Link to={about.primaryCtaLink}>
+                <Button size="lg">{about.primaryCtaText}</Button>
               </Link>
-              <a href={siteConfig.social.instagram} target="_blank" rel="noopener">
-                <Button size="lg" variant="outline">View Proofs</Button>
+              <a href={about.secondaryCtaLink} target="_blank" rel="noopener">
+                <Button size="lg" variant="outline">{about.secondaryCtaText}</Button>
               </a>
             </div>
           </motion.div>
@@ -251,10 +320,10 @@ function AboutSection() {
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                15,000+
+                {about.highlightNumber}
               </motion.div>
-              <div className="text-2xl text-muted-foreground relative">Happy Customers</div>
-              <div className="text-sm text-muted-foreground mt-2 relative">& Growing Every Day</div>
+              <div className="text-2xl text-muted-foreground relative">{about.highlightLabel}</div>
+              <div className="text-sm text-muted-foreground mt-2 relative">{about.highlightSubLabel}</div>
             </div>
             
             {/* Floating badges */}
@@ -263,14 +332,14 @@ function AboutSection() {
               animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              ⭐ 4.9 Rating
+              {about.floatingBadge1}
             </motion.div>
             <motion.div
               className="absolute -bottom-4 -left-4 bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg"
               animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity, delay: 1 }}
             >
-              🚀 Since 2021
+              {about.floatingBadge2}
             </motion.div>
           </motion.div>
         </div>
