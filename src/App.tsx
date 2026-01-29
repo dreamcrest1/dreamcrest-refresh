@@ -9,6 +9,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Preloader from "@/components/Preloader";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { PopupDisplay } from "@/components/PopupDisplay";
+import { PageTracker } from "@/components/PageTracker";
 
 const Index = lazy(() => import("./pages/Index"));
 const Products = lazy(() => import("./pages/Products"));
@@ -46,6 +48,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <PageTracker />
+            <PopupDisplay />
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />
