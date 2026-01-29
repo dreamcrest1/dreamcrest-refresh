@@ -24,10 +24,16 @@ export default function HomeDealOfTheWeek() {
       .map((p) => ({
         ...p,
         discount: calcDiscountPercent(Number(p.regular_price), Number(p.sale_price)),
-      }))
-      .sort((a, b) => b.discount - a.discount);
+      }));
 
-    return rows.slice(0, 5);
+    // Shuffle array randomly using Fisher-Yates algorithm
+    const shuffled = [...rows];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled.slice(0, 5);
   }, [data]);
 
   if (isLoading) return null;
