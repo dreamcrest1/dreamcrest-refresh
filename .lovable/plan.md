@@ -1,250 +1,177 @@
 
-Goal
-- Add a WordPress-like admin panel inside your existing website (same Vite/React app) so you can:
-  - Add/edit products
-  - Edit site content (hero slides, contact info, etc.)
-  - Create/edit blog posts
-  - Manage media (in v1 you chose “External URLs only”, so this will be an organized URL library rather than uploads)
-- Host the admin UI on your cPanel domain (same site build). The database/auth will run on Lovable Cloud/Supabase (backend), but nothing “admin UI” is hosted elsewhere.
+## Goal
+Migrate your backend off Lovable Cloud so it lives independently in **your own external Supabase project**, while keeping:
+- Your existing tables + data (`products`, `blog_posts`, `site_content`, `media_links`, `user_roles`)
+- Admin-only access control via roles
+- User accounts (email/password) working after migration, as much as technically possible
 
-What the codebase does today (important)
-- Products are currently compiled into the frontend from `src/data/products-export.csv` via `src/data/products.ts`.
-- Blog posts and site content are currently hardcoded in `src/data/siteData.ts`.
-- This is why you can’t “edit like WordPress” today: there’s no database and no login.
+You said:
+- Target: External Supabase
+- Keep logins: Yes
+- Downtime: Some downtime OK
+- Storage: Not needed (URLs only)
 
-Key decision (confirmed)
-- Backend choice: Use Cloud/Supabase backend (required for real-time editing).
-- Admin users: Single admin.
-- First version manages: Products + Site content + Blog + Media.
-- Product images: External URLs only (no file uploads).
+---
 
-High-level approach
-1) Add authentication (login + signup page), but restrict admin access by role (server-side enforced via RLS and a roles table).
-2) Create database tables for products, site content, blog posts, and media links.
-3) Update the public pages to read from the database (published records) with sensible loading/error fallbacks.
-4) Build an `/admin` area (protected route) with CRUD screens.
-5) Deploy the same compiled build to cPanel (admin is just another route: `/admin`).
+## Important reality check (logins)
+Most hosted auth systems (including Supabase Auth) **do not let you export existing users’ password hashes in a reusable way**. That means:
 
-Architecture (simple & secure)
-- Frontend (your site + admin UI): hosted on cPanel as static files (Vite build).
-- Backend (data + auth + security): Lovable Cloud / Supabase (database, RLS policies).
-- Security:
-  - Public visitors can only read “published” content.
-  - Only your admin user can create/update/delete.
-  - No client-side “isAdmin” checks via localStorage. All privileges enforced by RLS.
+- We can typically **migrate the user list (emails/ids)**, but **not the passwords**, so users may need to **reset their password once** on the new backend.
+- If you truly need “no password reset required”, that usually requires specialized access to password hashes and a compatible import mechanism (rare/limited).
 
-Phase 0 — Prerequisites / Setup checks
-- Confirm we have Lovable Cloud enabled for this project (or a connected Supabase project).
-- Decide your admin login email (the one you will use).
+So the practical “keep logins” plan is:
+1) migrate users (email identities) where possible, and  
+2) force a password reset / password re-set on first login after cutover.
 
-Phase 1 — Database schema (Cloud/Supabase)
-We will create:
-A) Roles (required even for single admin; prevents privilege escalation)
-- Enum: `public.app_role` with values ('admin', 'user')
-- Table: `public.user_roles`
-  - `id uuid pk`
-  - `user_id uuid references auth.users(id) on delete cascade not null`
-  - `role app_role not null`
-  - unique(user_id, role)
-- Function (SECURITY DEFINER): `public.has_role(_user_id uuid, _role app_role) returns boolean`
+This still preserves “accounts”, but users may need one-time action.
 
-B) Products
-Table: `public.products`
-- `id uuid primary key default gen_random_uuid()`
-- `name text not null`
-- `description text not null`
-- `long_description text null`
-- `category text not null`
-- `sale_price numeric not null`
-- `regular_price numeric not null`
-- `image_url text not null` (external URL)
-- `external_url text not null`
-- `featured boolean not null default false`
-- `published boolean not null default true`
-- `sort_order int not null default 0`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
+---
 
-C) Site content (for editable homepage/footer/etc.)
-Option 1 (recommended for speed): key/value JSON blobs
-Table: `public.site_content`
-- `key text primary key` (e.g. 'siteConfig', 'heroSlides')
-- `value jsonb not null`
-- `updated_at timestamptz not null default now()`
+## Phase 0 — Preparation (no downtime)
+### 0.1 Inventory what we need to migrate
+Backend objects in your project:
+- Tables: `products`, `blog_posts`, `site_content`, `media_links`, `user_roles`
+- Enum: `app_role`
+- Function: `has_role(_user_id uuid, _role app_role)`
+- RLS policies on the tables above
 
-D) Blog
-Table: `public.blog_posts`
-- `id uuid primary key default gen_random_uuid()`
-- `slug text not null unique`
-- `title text not null`
-- `excerpt text not null`
-- `content text not null` (Markdown or plain text for v1)
-- `category text not null`
-- `image_url text null`
-- `published boolean not null default true`
-- `published_at timestamptz null`
-- `created_at timestamptz not null default now()`
-- `updated_at timestamptz not null default now()`
+### 0.2 Decide your new “canonical” site URL
+You’ll need:
+- Production domain (e.g. `https://www.yourdomain.com`)
+- Optional staging domain
 
-E) Media (URL library)
-Table: `public.media_links`
-- `id uuid primary key default gen_random_uuid()`
-- `label text not null`
-- `url text not null`
-- `tags text[] not null default '{}'`
-- `created_at timestamptz not null default now()`
+These must be added to the new backend auth redirect allowlist.
 
-RLS policies (critical)
-- Enable RLS on all tables.
-- Public read:
-  - products: allow SELECT where `published = true`
-  - blog_posts: allow SELECT where `published = true`
-  - site_content: allow SELECT for everyone (or at least anon) because the homepage needs it
-  - media_links: admin only (or private), since it’s an internal library
-- Admin write:
-  - INSERT/UPDATE/DELETE allowed only if `public.has_role(auth.uid(), 'admin')` is true
+---
 
-Admin bootstrapping
-- After you create your admin user via signup/login, we will insert one row into `user_roles` to grant you admin.
-- This is a one-time step.
+## Phase 1 — Create the new independent backend (external Supabase)
+### 1.1 Create a new Supabase project (in your own account)
+You will:
+- Create a new project
+- Enable email/password authentication
+- Configure allowed redirect URLs for your frontend domain(s)
 
-Phase 2 — Authentication UI and session handling
-Add an `/auth` page:
-- Email + password login
-- Email + password signup (required for implementation completeness)
-- Important behavior:
-  - After login: redirect to `/admin`
-  - If logged in already: visiting `/auth` redirects to `/admin`
-  - Signup does not automatically grant admin role. Non-admin users will be blocked from `/admin`.
+### 1.2 Recreate schema (tables, enum, function, RLS)
+Recommended approach:
+- Use your existing `supabase/migrations/` in this repo as the source of truth.
+- Apply those migrations to the new backend.
 
-Create an Auth provider/hook:
-- Centralize:
-  - `session`
-  - `user`
-  - loading state
-- Use `supabase.auth.onAuthStateChange` + `supabase.auth.getSession()` in correct order (no async callbacks).
-- Provide a `signOut()` function.
+If the migrations folder isn’t complete/representative (sometimes happens), we’ll generate an explicit “schema SQL” package containing:
+- `CREATE TYPE public.app_role ...`
+- `CREATE TABLE public.* ...`
+- `CREATE FUNCTION public.has_role ... SECURITY DEFINER ...`
+- `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
+- `CREATE POLICY ...` for each table
 
-Phase 3 — Admin route protection (server-side + UI)
-Create `AdminRoute` wrapper:
-- If not logged in: redirect to `/auth`
-- If logged in but not admin:
-  - show “Access denied” page (and sign out button)
-- Admin check method:
-  - Call `supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })`
-  - Do not store role in localStorage; keep it in React state only.
+Key note:
+- Your current setup references `auth.users` in `user_roles` in the database (that’s expected in Supabase). That part is fine.
 
-Phase 4 — Admin panel UI (WordPress-like structure)
-Route: `/admin`
-Layout:
-- Left sidebar navigation:
-  - Products
-  - Site Content
-  - Blog
-  - Media (URLs)
-- Top bar:
-  - “View site” link
-  - “Logout”
-- Use existing UI stack:
-  - shadcn components already in repo (tables, dialogs, forms, etc.)
-  - react-hook-form + zod for validation
-  - TanStack Query for loading/mutations, with optimistic updates where safe
+---
 
-Admin screens (v1)
-A) Products
-- Table list with search + filters (category, published, featured)
-- Actions:
-  - Create product (modal or dedicated page)
-  - Edit product
-  - Toggle publish/featured
-  - Delete (confirm dialog)
-- Validation:
-  - required fields
-  - price numeric > 0
-  - image_url and external_url must be valid URLs
+## Phase 2 — Migrate data (some downtime not required yet)
+### 2.1 Export data from current backend
+Export these tables as CSV/JSON:
+- `products`
+- `blog_posts`
+- `site_content`
+- `media_links`
+- `user_roles` (this one depends on user ids; see user migration section)
 
-B) Site Content
-- “Site Config” editor:
-  - tagline, contact info, social links, address
-- “Hero Slides” editor:
-  - list + reorder + edit slides (title, subtitle, cta text, link, gradient)
-- We’ll store these as JSON in `site_content` (fastest to ship).
-- UI includes “Preview changes” section (optional) or immediate save.
+### 2.2 Import data into new backend
+Import in this order:
+1) `site_content` (safe)
+2) `media_links` (safe)
+3) `products` (safe)
+4) `blog_posts` (safe)
+5) `user_roles` (only after user ids exist in the new auth system)
 
-C) Blog
-- List posts with slug, title, published, date
-- Create/edit post:
-  - title, slug (auto-generate from title but editable)
-  - excerpt
-  - content (textarea/Markdown in v1)
-  - image_url
-  - published toggle + published_at
-- Slug uniqueness enforced by DB.
+---
 
-D) Media (URLs)
-- A simple “media links” library:
-  - Add label + URL + tags
-  - Copy URL button
-  - Search by label/tag
-- Later (if you want): can upgrade to real uploads with storage.
+## Phase 3 — Migrate authentication users (hard part)
+### 3.1 Best-practice “account continuity” strategy
+Because password hashes typically can’t be migrated:
+- Recreate the user identities (emails) in the new backend
+- Trigger password reset emails (or require users to use “Forgot password”)
 
-Phase 5 — Update public website to read from DB
-Products page + product detail
-- Replace usage of static `products` array with DB query:
-  - `select * from products where published = true order by sort_order, created_at desc`
-- Product detail route:
-  - currently `/product/:id` expects numeric ID from CSV
-  - We will change to UUID-based products (two options):
-    1) Keep route `/product/:id` but treat it as UUID string (recommended)
-    2) Keep numeric IDs by adding a `legacy_id int` column and mapping (more work)
-- I’ll propose option (1) for cleanliness unless you require preserving existing URLs.
+For your admin user:
+- Create the admin account in the new backend (same email)
+- Reset/set password
+- Then grant the admin role via `user_roles`
 
-Homepage + header/footer
-- Replace `siteConfig`, `heroSlides`, `blogPosts` reads from `src/data/siteData.ts` with DB fetches from `site_content` and `blog_posts`.
-- Add caching via React Query to keep it fast.
+### 3.2 Rebuild `user_roles` mapping
+`user_roles` stores `user_id` as UUID from the auth system.
 
-Graceful fallback
-- While DB loads: show skeleton UI (no layout shift)
-- On error: fallback to existing static data (optional), so the site never “goes blank”
+During migration, the UUID in the old backend will not automatically match the UUID in the new backend unless you have a way to preserve IDs (often you don’t).
 
-Phase 6 — Hosting on cPanel (your requirement)
-- The admin panel is part of the same static build.
-- On cPanel you will:
-  1) Run `npm run build` to create `dist/`
-  2) Upload contents of `dist/` to `public_html/`
-  3) Ensure SPA routing works via `.htaccess` rewrite so `/admin` and `/product/<uuid>` don’t 404 on refresh
-- Backend remains Cloud/Supabase and is accessed via HTTPS from your domain.
+So we do:
+- Create the user(s) first in the new backend
+- Look up their new `user_id`
+- Insert `user_roles` rows using the **new** `user_id`
 
-Phase 7 — QA checklist (end-to-end)
-- Auth:
-  - Signup works (but does not grant admin)
-  - Login works
-  - Logout works
-  - Session persists after refresh
-- Admin security:
-  - Non-admin cannot access `/admin` (both UI redirect + RLS blocks writes)
-- Products:
-  - Create/edit/delete works
-  - Public `/products` shows updates immediately
-- Site content:
-  - Editing hero slides updates homepage
-- Blog:
-  - Create/edit post shows in public blog list and blog detail
-- cPanel deployment:
-  - Refreshing `/admin` and `/blog/<slug>` works (no 404)
+Minimum for your case:
+- Insert one row: `(user_id=<new admin uuid>, role='admin')`
 
-Risks / Notes
-- URL compatibility: switching products from numeric IDs to UUIDs may break old links. If you need to keep current numeric product URLs, we’ll add a `legacy_id` column and use it in routes.
-- “Media” with external URLs is safe and easy. If later you want uploads, we must use storage (not DB blobs).
+Optional:
+- If you have multiple admins/editors, we’ll repeat.
 
-Files/components we will likely touch (implementation phase)
-- Routing: `src/App.tsx` (add /auth, /admin, update product route if needed)
-- Data sources: replace `src/data/products.ts` + parts of `src/data/siteData.ts` usage in pages
-- New pages: `src/pages/Auth.tsx`, `src/pages/admin/*` (or a single `Admin.tsx` with tabs)
-- New components: `src/components/admin/*`, `ProtectedRoute`, `AuthProvider`
-- Supabase/Cloud integration layer (existing path depends on what’s already set up in the project)
+---
 
-Before implementation: one critical confirmation
-- Product URLs: Do you want to keep existing `/product/1234` links working, or is it okay to move to UUID links like `/product/6f2c...`?
-  - If you want to keep old links, we’ll store a `legacy_id` and route by that.
+## Phase 4 — Update the frontend to point to the new backend (cutover step)
+Your app reads backend config from environment variables and the generated integration.
+
+Cutover steps:
+1) Replace backend URL + publishable/anon key in the project’s connection (switch from Lovable Cloud to external Supabase connection).
+2) Ensure auth redirect URLs match the production domain.
+3) Deploy the updated frontend build to cPanel.
+
+Downtime approach (simple and safe):
+- Put the site in “maintenance” briefly (or just accept that admin writes are paused)
+- Do a final data export from old backend for tables that may have changed (products/blog/site_content/media_links)
+- Import final data into new backend
+- Switch frontend keys to new backend
+- Test `/auth` + `/admin` + public pages
+
+---
+
+## Phase 5 — Verification checklist (must do)
+### Public pages
+- `/products` loads published products
+- `/blog` lists published posts
+- `/blog/:slug` renders markdown safely
+
+### Admin
+- `/auth` login works
+- `/admin` opens and shows overview counts
+- Products CRUD works (bulk actions + drag sorting + save order)
+- Blog CRUD works (markdown write/preview + publish toggles)
+- Site content templates save without JSON errors
+- Media links CRUD works
+
+### Security
+- Confirm RLS is enabled and enforced (non-admin cannot write)
+- Confirm `has_role()` works in the new backend
+- Confirm only admins can access admin tables
+
+---
+
+## What I need from you to execute this cleanly
+1) Your production domain(s) you will use (with/without `www`)
+2) How many admin accounts you need to migrate (just one, or multiple?)
+3) Whether you’re OK with the one-time password reset requirement for users/admins (this is usually unavoidable)
+
+---
+
+## Deliverables I will produce (once approved to implement)
+1) A step-by-step “migration runbook” you can follow (copy/paste checklist)
+2) The exact SQL needed to recreate your schema/RLS on the new backend (if your migrations aren’t sufficient)
+3) Exact instructions to switch the app from Lovable Cloud backend to your external Supabase connection (so cPanel build points to the new backend)
+4) A safe cutover plan with a short maintenance window and a final verification checklist
+
+---
+
+## Risks / pitfalls (so nothing surprises you)
+- User passwords almost certainly cannot be carried over; plan for reset.
+- If you switch frontend to the new backend before importing final data, public pages may look empty.
+- If redirect URLs aren’t configured on the new backend, login/signup can fail or redirect incorrectly.
+- `user_roles` must be reinserted using new user ids, or admin access will fail.
 
