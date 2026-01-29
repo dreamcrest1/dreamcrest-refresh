@@ -1,177 +1,74 @@
 
-## Goal
-Migrate your backend off Lovable Cloud so it lives independently in **your own external Supabase project**, while keeping:
-- Your existing tables + data (`products`, `blog_posts`, `site_content`, `media_links`, `user_roles`)
-- Admin-only access control via roles
-- User accounts (email/password) working after migration, as much as technically possible
+# Fix Homepage Blog Section Images
 
-You said:
-- Target: External Supabase
-- Keep logins: Yes
-- Downtime: Some downtime OK
-- Storage: Not needed (URLs only)
+## Problem Identified
+The "Latest Updates" section on the homepage is showing placeholder icons (📰) instead of actual blog post images. This happens because:
 
----
+1. The `BlogSection` component in `Index.tsx` uses static data from `siteData.ts`
+2. It hardcodes a gradient placeholder with an emoji instead of rendering actual images
+3. Blog posts aren't clickable - they don't link to the full blog post page
 
-## Important reality check (logins)
-Most hosted auth systems (including Supabase Auth) **do not let you export existing users’ password hashes in a reusable way**. That means:
+Meanwhile, the `/blog` page works correctly by fetching posts from the database and displaying real images.
 
-- We can typically **migrate the user list (emails/ids)**, but **not the passwords**, so users may need to **reset their password once** on the new backend.
-- If you truly need “no password reset required”, that usually requires specialized access to password hashes and a compatible import mechanism (rare/limited).
-
-So the practical “keep logins” plan is:
-1) migrate users (email identities) where possible, and  
-2) force a password reset / password re-set on first login after cutover.
-
-This still preserves “accounts”, but users may need one-time action.
+## Solution
+Update the homepage `BlogSection` to:
+1. Fetch live blog posts from the database (like the Blog page does)
+2. Display actual images using the `OptimizedImage` component
+3. Make each blog card clickable, linking to the full post
+4. Add proper fallback handling for missing images
 
 ---
 
-## Phase 0 — Preparation (no downtime)
-### 0.1 Inventory what we need to migrate
-Backend objects in your project:
-- Tables: `products`, `blog_posts`, `site_content`, `media_links`, `user_roles`
-- Enum: `app_role`
-- Function: `has_role(_user_id uuid, _role app_role)`
-- RLS policies on the tables above
+## Implementation Steps
 
-### 0.2 Decide your new “canonical” site URL
-You’ll need:
-- Production domain (e.g. `https://www.yourdomain.com`)
-- Optional staging domain
+### Step 1: Update BlogSection in Index.tsx
 
-These must be added to the new backend auth redirect allowlist.
+**Changes:**
+- Add the database fetch using `useQuery` and `listPublishedBlogPosts`
+- Replace the hardcoded placeholder with actual images using `OptimizedImage`
+- Wrap each blog card in a `Link` to `/blog/{slug}`
+- Show only the 3 most recent posts
+- Add a "View All" button linking to the full blog page
+- Handle loading state gracefully
 
----
+**Before (current code):**
+```jsx
+<div className="aspect-video bg-muted relative overflow-hidden rounded-lg mb-4">
+  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+    <span className="text-4xl">📰</span>
+  </div>
+</div>
+```
 
-## Phase 1 — Create the new independent backend (external Supabase)
-### 1.1 Create a new Supabase project (in your own account)
-You will:
-- Create a new project
-- Enable email/password authentication
-- Configure allowed redirect URLs for your frontend domain(s)
+**After (fixed code):**
+```jsx
+<div className="aspect-video relative overflow-hidden rounded-lg mb-4">
+  <OptimizedImage
+    src={post.image_url || "/images/blog/placeholder.jpg"}
+    alt={post.title}
+    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+    loading="lazy"
+  />
+</div>
+```
 
-### 1.2 Recreate schema (tables, enum, function, RLS)
-Recommended approach:
-- Use your existing `supabase/migrations/` in this repo as the source of truth.
-- Apply those migrations to the new backend.
+### Step 2: Add Required Imports
 
-If the migrations folder isn’t complete/representative (sometimes happens), we’ll generate an explicit “schema SQL” package containing:
-- `CREATE TYPE public.app_role ...`
-- `CREATE TABLE public.* ...`
-- `CREATE FUNCTION public.has_role ... SECURITY DEFINER ...`
-- `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
-- `CREATE POLICY ...` for each table
+Add these imports to `Index.tsx`:
+- `useQuery` from `@tanstack/react-query`
+- `listPublishedBlogPosts` from `@/lib/db/publicBlogPosts`
+- `OptimizedImage` from `@/components/OptimizedImage`
 
-Key note:
-- Your current setup references `auth.users` in `user_roles` in the database (that’s expected in Supabase). That part is fine.
+### Step 3: Format Dates Properly
 
----
-
-## Phase 2 — Migrate data (some downtime not required yet)
-### 2.1 Export data from current backend
-Export these tables as CSV/JSON:
-- `products`
-- `blog_posts`
-- `site_content`
-- `media_links`
-- `user_roles` (this one depends on user ids; see user migration section)
-
-### 2.2 Import data into new backend
-Import in this order:
-1) `site_content` (safe)
-2) `media_links` (safe)
-3) `products` (safe)
-4) `blog_posts` (safe)
-5) `user_roles` (only after user ids exist in the new auth system)
+Use the database `published_at` or `created_at` fields and format them nicely (e.g., "Jan 29, 2026").
 
 ---
 
-## Phase 3 — Migrate authentication users (hard part)
-### 3.1 Best-practice “account continuity” strategy
-Because password hashes typically can’t be migrated:
-- Recreate the user identities (emails) in the new backend
-- Trigger password reset emails (or require users to use “Forgot password”)
+## Technical Summary
 
-For your admin user:
-- Create the admin account in the new backend (same email)
-- Reset/set password
-- Then grant the admin role via `user_roles`
+| File | Changes |
+|------|---------|
+| `src/pages/Index.tsx` | Update `BlogSection` to fetch from database, render real images, add links |
 
-### 3.2 Rebuild `user_roles` mapping
-`user_roles` stores `user_id` as UUID from the auth system.
-
-During migration, the UUID in the old backend will not automatically match the UUID in the new backend unless you have a way to preserve IDs (often you don’t).
-
-So we do:
-- Create the user(s) first in the new backend
-- Look up their new `user_id`
-- Insert `user_roles` rows using the **new** `user_id`
-
-Minimum for your case:
-- Insert one row: `(user_id=<new admin uuid>, role='admin')`
-
-Optional:
-- If you have multiple admins/editors, we’ll repeat.
-
----
-
-## Phase 4 — Update the frontend to point to the new backend (cutover step)
-Your app reads backend config from environment variables and the generated integration.
-
-Cutover steps:
-1) Replace backend URL + publishable/anon key in the project’s connection (switch from Lovable Cloud to external Supabase connection).
-2) Ensure auth redirect URLs match the production domain.
-3) Deploy the updated frontend build to cPanel.
-
-Downtime approach (simple and safe):
-- Put the site in “maintenance” briefly (or just accept that admin writes are paused)
-- Do a final data export from old backend for tables that may have changed (products/blog/site_content/media_links)
-- Import final data into new backend
-- Switch frontend keys to new backend
-- Test `/auth` + `/admin` + public pages
-
----
-
-## Phase 5 — Verification checklist (must do)
-### Public pages
-- `/products` loads published products
-- `/blog` lists published posts
-- `/blog/:slug` renders markdown safely
-
-### Admin
-- `/auth` login works
-- `/admin` opens and shows overview counts
-- Products CRUD works (bulk actions + drag sorting + save order)
-- Blog CRUD works (markdown write/preview + publish toggles)
-- Site content templates save without JSON errors
-- Media links CRUD works
-
-### Security
-- Confirm RLS is enabled and enforced (non-admin cannot write)
-- Confirm `has_role()` works in the new backend
-- Confirm only admins can access admin tables
-
----
-
-## What I need from you to execute this cleanly
-1) Your production domain(s) you will use (with/without `www`)
-2) How many admin accounts you need to migrate (just one, or multiple?)
-3) Whether you’re OK with the one-time password reset requirement for users/admins (this is usually unavoidable)
-
----
-
-## Deliverables I will produce (once approved to implement)
-1) A step-by-step “migration runbook” you can follow (copy/paste checklist)
-2) The exact SQL needed to recreate your schema/RLS on the new backend (if your migrations aren’t sufficient)
-3) Exact instructions to switch the app from Lovable Cloud backend to your external Supabase connection (so cPanel build points to the new backend)
-4) A safe cutover plan with a short maintenance window and a final verification checklist
-
----
-
-## Risks / pitfalls (so nothing surprises you)
-- User passwords almost certainly cannot be carried over; plan for reset.
-- If you switch frontend to the new backend before importing final data, public pages may look empty.
-- If redirect URLs aren’t configured on the new backend, login/signup can fail or redirect incorrectly.
-- `user_roles` must be reinserted using new user ids, or admin access will fail.
-
+This approach ensures the homepage blog section matches the actual published blog posts and displays their proper featured images instead of placeholder icons.
