@@ -44,14 +44,13 @@ const App = () => (
     <ThemeProvider defaultTheme="dark" storageKey="dreamcrest-theme">
       <TooltipProvider>
         <AuthProvider>
-          <CartProvider>
-            <Preloader />
-
-            <FloatingWhatsApp />
-            <CartDrawer />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <Preloader />
+          <FloatingWhatsApp />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <CartProvider>
+              <CartDrawer />
               <ScrollToTop />
               <PageTracker />
               <PopupDisplay />
@@ -75,8 +74,8 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
-            </BrowserRouter>
-          </CartProvider>
+            </CartProvider>
+          </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
