@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          checkout_url: string | null
+          created_at: string
+          id: string
+          items: Json
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          items: Json
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           created_at: string
@@ -214,6 +241,27 @@ export type Database = {
           regular_price?: number
           sale_price?: number
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
           updated_at?: string
         }
         Relationships: []

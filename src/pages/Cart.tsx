@@ -7,11 +7,30 @@ import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice } from "@/data/products";
+import { useAuth } from "@/providers/AuthProvider";
+import { createOrder } from "@/lib/db/orders";
+import { toast } from "@/hooks/use-toast";
 
 const CHECKOUT_URL = "https://cosmofeed.com/vp/64297b5ed83e0200209d5a3c";
 
 export default function Cart() {
   const { items, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+
+  const handleCheckout = async () => {
+    // If user is logged in, save the order
+    if (user) {
+      const order = await createOrder(user.id, items, totalPrice, CHECKOUT_URL);
+      if (order) {
+        toast({
+          title: "Order recorded",
+          description: "Your order has been saved to your account.",
+        });
+      }
+    }
+    // Open checkout in new tab
+    window.open(CHECKOUT_URL, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,19 +200,18 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  <a
-                    href={CHECKOUT_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
+                  <Button 
+                    className="w-full gap-2 btn-glow" 
+                    size="lg"
+                    onClick={handleCheckout}
                   >
-                    <Button className="w-full gap-2 btn-glow" size="lg">
-                      Proceed to Checkout <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </a>
+                    Proceed to Checkout <ExternalLink className="h-4 w-4" />
+                  </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
-                    You will be redirected to our secure payment partner
+                    {user 
+                      ? "Your order will be saved to your account" 
+                      : "Sign in to track your orders"}
                   </p>
 
                   <Link to="/products" className="block">
