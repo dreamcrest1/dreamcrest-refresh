@@ -11,6 +11,8 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { PopupDisplay } from "@/components/PopupDisplay";
 import { PageTracker } from "@/components/PageTracker";
+import { CartProvider } from "@/contexts/CartContext";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 const Index = lazy(() => import("./pages/Index"));
 const Products = lazy(() => import("./pages/Products"));
@@ -22,6 +24,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Cart = lazy(() => import("./pages/Cart"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -41,35 +44,39 @@ const App = () => (
     <ThemeProvider defaultTheme="dark" storageKey="dreamcrest-theme">
       <TooltipProvider>
         <AuthProvider>
-          <Preloader />
+          <CartProvider>
+            <Preloader />
 
-          <FloatingWhatsApp />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <PageTracker />
-            <PopupDisplay />
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/alltools" element={<AllTools />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/refunds" element={<Refunds />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:id" element={<BlogPost />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/admin/*" element={<Admin />} />
-                
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+            <FloatingWhatsApp />
+            <CartDrawer />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <PageTracker />
+              <PopupDisplay />
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/alltools" element={<AllTools />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/refunds" element={<Refunds />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:id" element={<BlogPost />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/admin/*" element={<Admin />} />
+                  
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </CartProvider>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
