@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { navLinks as defaultNavLinks } from "@/data/siteData";
 import { useNavLinks, useHeaderSettings } from "@/hooks/useSiteContent";
 import { CartIcon } from "@/components/cart/CartIcon";
+import { UserMenu } from "@/components/UserMenu";
 import logo from "@/assets/dreamcrest-logo.png";
 
 export function Header() {
@@ -75,12 +76,8 @@ export function Header() {
           <div className="flex items-center gap-2 md:gap-3">
             <CartIcon />
             <ThemeToggle />
+            <UserMenu />
 
-            {settings.showAdminButton && (
-              <Link to="/auth" className="hidden sm:block">
-                <Button variant="outline" size="sm">Admin</Button>
-              </Link>
-            )}
             {settings.showShopButton && (
               <Link to="/products">
                 <Button variant="default" size="sm" className="hidden sm:flex gap-2 btn-glow">
