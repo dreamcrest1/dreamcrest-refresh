@@ -7,6 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { navLinks as defaultNavLinks } from "@/data/siteData";
 import { useNavLinks, useHeaderSettings } from "@/hooks/useSiteContent";
+import { CartIcon } from "@/components/cart/CartIcon";
 import logo from "@/assets/dreamcrest-logo.png";
 
 export function Header() {
@@ -71,7 +72,8 @@ export function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
+            <CartIcon />
             <ThemeToggle />
 
             {settings.showAdminButton && (

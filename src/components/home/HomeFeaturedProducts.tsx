@@ -10,6 +10,7 @@ import { listPublishedProducts } from "@/lib/db/publicProducts";
 import { formatPriceINR, getCategoryFallbackImage } from "@/lib/products/format";
 import { stripHtml } from "@/lib/text/stripHtml";
 import { buildWhatsAppInquireUrl } from "@/lib/whatsapp";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 
 export default function HomeFeaturedProducts() {
   const { data, isLoading, isError } = useQuery({
@@ -89,8 +90,22 @@ export default function HomeFeaturedProducts() {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  <Button
+                  <AddToCartButton
+                    product={{
+                      id: product.id,
+                      legacyId: product.legacy_id ?? 0,
+                      name: product.name,
+                      salePrice: Number(product.sale_price),
+                      regularPrice: Number(product.regular_price),
+                      image: product.image_url,
+                      category: product.category,
+                    }}
                     className="w-full btn-glow"
+                  />
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault();
@@ -98,22 +113,6 @@ export default function HomeFeaturedProducts() {
                     }}
                   >
                     Buy Now
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open(
-                        buildWhatsAppInquireUrl(`Hi, I'm interested in ${product.name}`),
-                        "_blank"
-                      );
-                    }}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Inquire on WhatsApp
                   </Button>
                 </div>
               </motion.div>

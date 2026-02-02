@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check } from "lucide-react";
+import { ExternalLink, ShieldCheck, Zap, Clock, MessageCircle, Check, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExpandableText } from "@/components/ExpandableText";
@@ -14,6 +14,7 @@ import { formatPrice, getCategoryFallback } from "@/data/products";
 import { getPublishedProductByLegacyId, listPublishedProducts } from "@/lib/db/publicProducts";
 import { siteConfig } from "@/data/siteData";
 import { stripHtml } from "@/lib/text/stripHtml";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -236,13 +237,26 @@ export default function ProductDetail() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
+                <AddToCartButton
+                  product={{
+                    id: product.id,
+                    legacyId: product.legacy_id ?? 0,
+                    name: product.name,
+                    salePrice: Number(product.sale_price ?? 0),
+                    regularPrice: Number(product.regular_price ?? 0),
+                    image: product.image_url,
+                    category: product.category,
+                  }}
+                  size="lg"
+                  className="flex-1 text-lg"
+                />
                 <a
                   href={product.external_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"
                 >
-                  <Button size="lg" className="w-full gap-2 text-lg">
+                  <Button variant="outline" size="lg" className="w-full gap-2 text-lg">
                     Buy Now <ExternalLink className="h-5 w-5" />
                   </Button>
                 </a>
@@ -252,9 +266,9 @@ export default function ProductDetail() {
                   rel="noopener noreferrer"
                   className="flex-1"
                 >
-                  <Button variant="outline" size="lg" className="w-full gap-2 text-lg">
+                  <Button variant="ghost" size="lg" className="w-full gap-2 text-lg">
                     <MessageCircle className="h-5 w-5" />
-                    Ask on WhatsApp
+                    WhatsApp
                   </Button>
                 </a>
               </div>
@@ -308,19 +322,21 @@ export default function ProductDetail() {
                       </Link>
 
                       <div className="mt-3 grid grid-cols-1 gap-2">
+                        <AddToCartButton
+                          product={{
+                            id: String(relProduct.id),
+                            legacyId: relProduct.id,
+                            name: relProduct.name,
+                            salePrice: relProduct.salePrice,
+                            regularPrice: relProduct.regularPrice,
+                            image: relProduct.image,
+                            category: relProduct.category,
+                          }}
+                          className="w-full"
+                        />
                         <a href={relProduct.externalUrl} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" className="w-full gap-2">
-                            Buy Now <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </a>
-                        <a
-                          href={`https://wa.me/${siteConfig.contact.phone.replace(/\D/g, "")}?text=Hi, I'm interested in ${relProduct.name}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
                           <Button variant="outline" size="sm" className="w-full gap-2">
-                            <MessageCircle className="h-4 w-4" />
-                            Inquire on WhatsApp
+                            Buy Now <ExternalLink className="h-4 w-4" />
                           </Button>
                         </a>
                       </div>
