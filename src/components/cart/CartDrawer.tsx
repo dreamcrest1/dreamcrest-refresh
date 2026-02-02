@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingCart, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,12 @@ const CHECKOUT_URL = "https://cosmofeed.com/vp/64297b5ed83e0200209d5a3c";
 
 export function CartDrawer() {
   const { items, isDrawerOpen, closeDrawer, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+
+  const navigateTo = (path: string) => {
+    closeDrawer();
+    // Fallback navigation to avoid Router context issues inside the drawer.
+    window.location.assign(path);
+  };
 
   return (
     <AnimatePresence>
@@ -49,9 +54,7 @@ export function CartDrawer() {
                   <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
                   <p className="text-lg font-medium mb-2">Your cart is empty</p>
                   <p className="text-sm text-muted-foreground mb-4">Add some products to get started!</p>
-                  <Link to="/products" onClick={closeDrawer}>
-                    <Button>Browse Products</Button>
-                  </Link>
+                  <Button onClick={() => navigateTo("/products")}>Browse Products</Button>
                 </div>
               ) : (
                 items.map((item) => (
@@ -64,9 +67,12 @@ export function CartDrawer() {
                     className="flex gap-3 p-3 bg-muted/50 rounded-lg border border-border"
                   >
                     {/* Image */}
-                    <Link
-                      to={`/product/${item.legacyId}`}
-                      onClick={closeDrawer}
+                    <a
+                      href={`/product/${item.legacyId}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigateTo(`/product/${item.legacyId}`);
+                      }}
                       className="shrink-0"
                     >
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
@@ -76,19 +82,22 @@ export function CartDrawer() {
                           className="w-full h-full object-contain p-1"
                         />
                       </div>
-                    </Link>
+                    </a>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <Link
-                        to={`/product/${item.legacyId}`}
-                        onClick={closeDrawer}
+                      <a
+                        href={`/product/${item.legacyId}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigateTo(`/product/${item.legacyId}`);
+                        }}
                         className="block"
                       >
                         <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors">
                           {item.name}
                         </h3>
-                      </Link>
+                      </a>
                       <p className="text-xs text-muted-foreground mt-0.5">{item.category}</p>
 
                       <div className="flex items-center justify-between mt-2">
@@ -155,11 +164,14 @@ export function CartDrawer() {
                     </Button>
                   </a>
 
-                  <Link to="/cart" onClick={closeDrawer}>
-                    <Button variant="outline" className="w-full" size="lg">
-                      View Full Cart
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={() => navigateTo("/cart")}
+                  >
+                    View Full Cart
+                  </Button>
 
                   <Button
                     variant="ghost"
