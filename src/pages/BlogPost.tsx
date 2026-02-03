@@ -7,10 +7,10 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { Button } from "@/components/ui/button";
 import OptimizedImage from "@/components/OptimizedImage";
-
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedBlogPostBySlug } from "@/lib/db/publicBlogPosts";
 import MarkdownRenderer from "@/components/markdown/MarkdownRenderer";
+import SEOHead from "@/components/SEOHead";
 
 function readTimeFromText(text: string) {
   const words = (text ?? "").trim().split(/\s+/).filter(Boolean).length;
@@ -68,6 +68,28 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background noise-overlay">
+      <SEOHead
+        title={post.meta_title || post.title}
+        description={post.meta_description || post.excerpt}
+        image={post.og_image_url || post.image_url || undefined}
+        url={`https://dreamcrest.net/blog/${post.slug}`}
+        type="article"
+        publishedTime={post.published_at || post.created_at}
+        modifiedTime={post.updated_at}
+        article={{
+          headline: post.title,
+          description: post.excerpt,
+          image: post.image_url || "https://dreamcrest.net/og-image.jpg",
+          publishedTime: post.published_at || post.created_at,
+          modifiedTime: post.updated_at,
+          category: post.category,
+        }}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Blog", url: "/blog" },
+          { name: post.title, url: `/blog/${post.slug}` },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

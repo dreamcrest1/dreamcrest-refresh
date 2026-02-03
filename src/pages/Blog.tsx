@@ -6,9 +6,10 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import OptimizedImage from "@/components/OptimizedImage";
-
 import { useQuery } from "@tanstack/react-query";
 import { listPublishedBlogPosts } from "@/lib/db/publicBlogPosts";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 function readTimeFromText(text: string) {
   const words = (text ?? "").trim().split(/\s+/).filter(Boolean).length;
@@ -25,8 +26,24 @@ export default function Blog() {
 
   const posts = postsQuery.data ?? [];
 
+  const seo = useSEODefaults("/blog", {
+    title: "Blog & Updates",
+    description: "Stay updated with the latest news, features, and announcements from Dreamcrest. Tips on AI tools, OTT services, and digital products.",
+    keywords: "blog, news, updates, AI tools, OTT, digital products",
+  });
+
   return (
     <div className="min-h-screen bg-background noise-overlay">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Blog", url: "/blog" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

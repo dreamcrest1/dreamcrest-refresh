@@ -6,14 +6,32 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { siteConfig, refundPolicy } from "@/data/siteData";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 const policyIcons = [
   Ban, RefreshCw, Shield, Clock, DollarSign, FileText, Wrench, Server, Zap, Settings, Heart
 ];
 
 export default function Refunds() {
+  const seo = useSEODefaults("/refunds", {
+    title: "Refund & Return Policy",
+    description: "Read our refund and return policy for digital products. Understand our terms for non-refundable digital items and replacement guarantees.",
+    keywords: "refund policy, returns, digital products, replacement, terms",
+  });
+
   return (
     <div className="min-h-screen bg-background noise-overlay">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Refunds", url: "/refunds" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

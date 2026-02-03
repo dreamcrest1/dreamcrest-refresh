@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Package, FileText, Image, Settings, Palette, Home, ChevronRight, Megaphone, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Package, FileText, Image, Settings, Palette, Home, ChevronRight, Megaphone, BarChart3, Search } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
@@ -18,14 +18,16 @@ import AdminHomepage from "@/pages/admin/AdminHomepage";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminPopups from "@/pages/admin/AdminPopups";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
+import AdminSEO from "@/pages/admin/AdminSEO";
 
-type Tab = "overview" | "analytics" | "products" | "site" | "blog" | "media" | "appearance" | "homepage" | "popups" | "settings";
+type Tab = "overview" | "analytics" | "products" | "site" | "blog" | "media" | "appearance" | "homepage" | "popups" | "settings" | "seo";
 
 const menuItems: Array<{ id: Tab; label: string; icon: React.ElementType; description?: string }> = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard, description: "Overview & stats" },
   { id: "analytics", label: "Analytics", icon: BarChart3, description: "Traffic & visitors" },
   { id: "products", label: "Products", icon: Package, description: "Manage products" },
   { id: "blog", label: "Blog Posts", icon: FileText, description: "Articles & news" },
+  { id: "seo", label: "SEO", icon: Search, description: "Meta tags & sitemap" },
   { id: "popups", label: "Popups", icon: Megaphone, description: "Banners & promotions" },
   { id: "media", label: "Media URLs", icon: Image, description: "Image & file links" },
   { id: "homepage", label: "Homepage", icon: Home, description: "Hero, stats, about" },
@@ -125,6 +127,7 @@ export default function AdminShell() {
                   {tab === "products" && <AdminProducts />}
                   {tab === "site" && <AdminSiteContent />}
                   {tab === "blog" && <AdminBlog />}
+                  {tab === "seo" && <AdminSEO />}
                   {tab === "popups" && <AdminPopups />}
                   {tab === "media" && <AdminMediaLinks />}
                   {tab === "appearance" && <AdminAppearance />}

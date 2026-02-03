@@ -19,6 +19,8 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { siteConfig } from "@/data/siteData";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 function buildEmail(parts: string[]) {
   return parts.join("");
@@ -51,8 +53,24 @@ export default function Contact() {
     buildEmail(["dreamstarott", "@", "gmail", ".com"]),
   ];
 
+  const seo = useSEODefaults("/contact", {
+    title: "Contact Us - Dreamcrest Solutions",
+    description: "Get in touch with Dreamcrest Solutions. Reach us via WhatsApp, email, or phone for instant support on digital products, AI tools, and OTT subscriptions.",
+    keywords: "contact dreamcrest, whatsapp support, customer service, digital products help",
+  });
+
   return (
     <div className="min-h-screen bg-background noise-overlay">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Contact", url: "/contact" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

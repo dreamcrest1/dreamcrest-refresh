@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { siteConfig } from "@/data/siteData";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 export default function About() {
   const stats = [
@@ -44,8 +46,24 @@ export default function About() {
     { year: "2025", event: "Serving 15,000+ customers across India" },
   ];
 
+  const seo = useSEODefaults("/about", {
+    title: "About Us - India's Trusted Digital Product Store",
+    description: "Learn about Dreamcrest Solutions, founded in 2021, serving 15,000+ customers with premium digital products, AI tools, and OTT subscriptions.",
+    keywords: "about dreamcrest, digital products india, trusted store, company history",
+  });
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "About", url: "/about" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

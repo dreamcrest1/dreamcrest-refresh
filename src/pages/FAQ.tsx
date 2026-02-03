@@ -11,6 +11,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CyberBackground, CursorTrail } from "@/components/CyberBackground";
 import { siteConfig } from "@/data/siteData";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 const faqs = [
   {
@@ -76,8 +78,24 @@ const faqs = [
 ];
 
 export default function FAQ() {
+  const seo = useSEODefaults("/faq", {
+    title: "Frequently Asked Questions",
+    description: "Find answers to common questions about Dreamcrest products, delivery, refunds, payment methods, and customer support.",
+    keywords: "FAQ, questions, help, support, digital products, delivery, refunds",
+  });
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "FAQ", url: "/faq" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

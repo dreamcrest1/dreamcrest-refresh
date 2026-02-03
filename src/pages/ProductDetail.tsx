@@ -15,6 +15,7 @@ import { getPublishedProductByLegacyId, listPublishedProducts } from "@/lib/db/p
 import { siteConfig } from "@/data/siteData";
 import { stripHtml } from "@/lib/text/stripHtml";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import SEOHead from "@/components/SEOHead";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -109,8 +110,32 @@ export default function ProductDetail() {
     { icon: MessageCircle, text: "WhatsApp Assistance" },
   ];
 
+  const salePrice = Number(product.sale_price ?? 0);
+  const regularPrice = Number(product.regular_price ?? 0);
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={product.meta_title || product.name}
+        description={product.meta_description || stripHtml(product.description).slice(0, 160)}
+        image={product.og_image_url || product.image_url}
+        url={`https://dreamcrest.net/product/${product.legacy_id}`}
+        type="product"
+        product={{
+          name: product.name,
+          description: stripHtml(product.description),
+          image: product.image_url,
+          price: salePrice,
+          currency: "INR",
+          availability: "InStock",
+          category: product.category,
+        }}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Products", url: "/products" },
+          { name: product.name, url: `/product/${product.legacy_id}` },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />

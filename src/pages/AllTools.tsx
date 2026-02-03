@@ -12,6 +12,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 const WHATSAPP_NUMBER = "916357998730";
 const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/HAygGmjN7cNLePOWBtrPjc";
@@ -361,6 +363,12 @@ export default function AllTools() {
   const [query, setQuery] = useState("");
   const [openCategory, setOpenCategory] = useState<string | undefined>(undefined);
 
+  const seo = useSEODefaults("/all-tools", {
+    title: "All Tools - Premium Software & Subscriptions",
+    description: "Browse our complete catalog of AI tools, learning platforms, SEO tools, video editing software, VPN services and more at discounted prices.",
+    keywords: "AI tools, SEO tools, video editing, VPN, software, subscriptions, discounts",
+  });
+
   const filtered = useMemo(() => {
     const q = normalize(query);
     if (!q) {
@@ -393,6 +401,16 @@ export default function AllTools() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "All Tools", url: "/all-tools" },
+        ]}
+      />
       <CyberBackground />
       <Header />
 

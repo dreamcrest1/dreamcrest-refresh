@@ -16,6 +16,8 @@ import { useHeroSection, useAboutSection, useCategoryIcons, useSiteConfig } from
 import { listPublishedBlogPosts } from "@/lib/db/publicBlogPosts";
 import OptimizedImage from "@/components/OptimizedImage";
 import { Skeleton } from "@/components/ui/skeleton";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 // Icon mapping for trust badges
 const iconMap: Record<string, React.ElementType> = {
   "100% Genuine": ShieldCheck,
@@ -458,8 +460,21 @@ function BlogSection() {
 
 // Main Index Page
 export default function Index() {
+  const seo = useSEODefaults("/", {
+    title: "India's Most Trusted Digital Product Store",
+    description: "Get premium AI tools, OTT subscriptions, software & more at unbeatable prices. Serving 15,000+ happy customers since 2021.",
+    keywords: "digital products, OTT subscriptions, AI tools, software, discounts, India",
+  });
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[{ name: "Home", url: "/" }]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />
