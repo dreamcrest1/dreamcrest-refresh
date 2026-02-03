@@ -22,6 +22,9 @@ export type Database = {
           excerpt: string
           id: string
           image_url: string | null
+          meta_description: string | null
+          meta_title: string | null
+          og_image_url: string | null
           published: boolean
           published_at: string | null
           slug: string
@@ -35,6 +38,9 @@ export type Database = {
           excerpt: string
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image_url?: string | null
           published?: boolean
           published_at?: string | null
           slug: string
@@ -48,6 +54,9 @@ export type Database = {
           excerpt?: string
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image_url?: string | null
           published?: boolean
           published_at?: string | null
           slug?: string
@@ -202,7 +211,10 @@ export type Database = {
           image_url: string
           legacy_id: number | null
           long_description: string | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
+          og_image_url: string | null
           published: boolean
           regular_price: number
           sale_price: number
@@ -219,7 +231,10 @@ export type Database = {
           image_url: string
           legacy_id?: number | null
           long_description?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
+          og_image_url?: string | null
           published?: boolean
           regular_price?: number
           sale_price?: number
@@ -236,7 +251,10 @@ export type Database = {
           image_url?: string
           legacy_id?: number | null
           long_description?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
+          og_image_url?: string | null
           published?: boolean
           regular_price?: number
           sale_price?: number
@@ -262,6 +280,51 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_metadata: {
+        Row: {
+          canonical_url: string | null
+          created_at: string
+          id: string
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
+          page_path: string
+          robots: string | null
+          updated_at: string
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          page_path: string
+          robots?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          page_path?: string
+          robots?: string | null
           updated_at?: string
         }
         Relationships: []

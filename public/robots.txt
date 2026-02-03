@@ -13,5 +13,5 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://dreamcrest.net/sitemap.xml
+Sitemap: https://pvpfxyxxzyqvisolnqzt.supabase.co/functions/v1/sitemap
 

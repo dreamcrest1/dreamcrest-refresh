@@ -14,6 +14,8 @@ import { formatPrice, getCategoryFallback } from "@/data/products";
 import { stripHtml } from "@/lib/text/stripHtml";
 import { buildWhatsAppInquireUrl } from "@/lib/whatsapp";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import SEOHead from "@/components/SEOHead";
+import { useSEODefaults } from "@/hooks/useSEO";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -108,8 +110,24 @@ export default function Products() {
     navigate(`/product/${productId}`);
   };
 
+  const seo = useSEODefaults("/products", {
+    title: "All Products - Digital Tools & Subscriptions",
+    description: `Browse ${products.length}+ premium digital products including AI tools, OTT subscriptions, and software at up to 80% off.`,
+    keywords: "digital products, AI tools, OTT subscriptions, software, discounts",
+  });
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        image={seo.image}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Products", url: "/products" },
+        ]}
+      />
       <CyberBackground />
       <CursorTrail />
       <Header />
