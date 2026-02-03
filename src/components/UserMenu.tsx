@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Package, ChevronDown } from "lucide-react";
+import { User, LogOut, Package, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,10 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/providers/AuthProvider";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 
 export function UserMenu() {
   const { user, loading } = useAuth();
+  const { data: isAdmin, isLoading: roleLoading } = useAdminRole(user?.id);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -20,7 +22,7 @@ export function UserMenu() {
     navigate("/");
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
     );
@@ -56,6 +58,17 @@ export function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
+        {isAdmin && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                Admin Panel
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem asChild>
           <Link to="/account" className="cursor-pointer">
             <User className="h-4 w-4 mr-2" />
