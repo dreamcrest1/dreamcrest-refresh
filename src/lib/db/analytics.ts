@@ -40,73 +40,25 @@ export async function getPageViewStats(startDate: Date, endDate: Date) {
 }
 
 export async function getAnalyticsSummary(days: number = 30) {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("*")
-    .gte("created_at", startDate.toISOString())
-    .lte("created_at", endDate.toISOString());
+  const { data, error } = await supabase.rpc("get_analytics_summary", {
+    _days: days,
+  });
 
   if (error) throw error;
 
-  const views = data as PageView[];
-  
-  // Calculate metrics
-  const totalViews = views.length;
-  const uniqueSessions = new Set(views.map(v => v.session_id).filter(Boolean)).size;
-  
-  // Page path counts
-  const pagePathCounts: Record<string, number> = {};
-  views.forEach(v => {
-    pagePathCounts[v.page_path] = (pagePathCounts[v.page_path] || 0) + 1;
-  });
-  
-  // Top pages
-  const topPages = Object.entries(pagePathCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([path, count]) => ({ path, count }));
-
-  // Referrer counts
-  const referrerCounts: Record<string, number> = {};
-  views.forEach(v => {
-    if (v.referrer) {
-      try {
-        const url = new URL(v.referrer);
-        const source = url.hostname || "Direct";
-        referrerCounts[source] = (referrerCounts[source] || 0) + 1;
-      } catch {
-        referrerCounts["Direct"] = (referrerCounts["Direct"] || 0) + 1;
-      }
-    } else {
-      referrerCounts["Direct"] = (referrerCounts["Direct"] || 0) + 1;
-    }
-  });
-
-  const trafficSources = Object.entries(referrerCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([source, count]) => ({ source, count }));
-
-  // Views by day
-  const viewsByDay: Record<string, number> = {};
-  views.forEach(v => {
-    const day = v.created_at.split("T")[0];
-    viewsByDay[day] = (viewsByDay[day] || 0) + 1;
-  });
-
-  const dailyViews = Object.entries(viewsByDay)
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([date, count]) => ({ date, count }));
+  const result = data as {
+    totalViews: number;
+    uniqueSessions: number;
+    topPages: { path: string; count: number }[];
+    trafficSources: { source: string; count: number }[];
+    dailyViews: { date: string; count: number }[];
+  };
 
   return {
-    totalViews,
-    uniqueSessions,
-    topPages,
-    trafficSources,
-    dailyViews,
+    totalViews: result.totalViews,
+    uniqueSessions: result.uniqueSessions,
+    topPages: result.topPages,
+    trafficSources: result.trafficSources,
+    dailyViews: result.dailyViews,
   };
 }
